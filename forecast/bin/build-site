@@ -4,6 +4,8 @@
 from __future__ import annotations
 
 import argparse
+import datetime as _dt
+import subprocess
 import sys
 from pathlib import Path
 
@@ -13,6 +15,22 @@ from tracker.integrity import GitUnavailable, verify_all
 from tracker.model import load_all
 from tracker.render import write_site
 from tracker.scoring import standing
+
+
+def last_record_change(root: Path) -> _dt.datetime | None:
+    """When the prediction records last changed, per git.
+
+    Used to date the page. Deriving it from the commit rather than from the clock keeps the
+    build reproducible, so a rebuild with no record changes produces a byte-identical page.
+    """
+    result = subprocess.run(
+        ["git", "log", "-1", "--format=%aI", "--", str(PREDICTIONS_DIR)],
+        cwd=root, capture_output=True, text=True, check=False,
+    )
+    stamp = result.stdout.strip()
+    if result.returncode != 0 or not stamp:
+        return None
+    return _dt.datetime.fromisoformat(stamp)
 
 
 def main() -> int:
@@ -33,7 +51,7 @@ def main() -> int:
         integrity_error = str(exc)
         print(f"warning: {exc}", file=sys.stderr)
 
-    index = write_site(predictions, report, output, integrity_error)
+    index = write_site(predictions, report, output, integrity_error, last_record_change(root))
     result = standing(predictions)
     print(f"wrote {index}")
     print(f"  {result.total} record(s): {result.resolved} resolved, {result.open} open")

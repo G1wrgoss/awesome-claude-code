@@ -20,7 +20,7 @@ CLEAN_REPORT = Report(verdicts=[], checked_at="2026-09-10T00:00:00+00:00")
 
 
 def page(predictions, report=CLEAN_REPORT, error=None) -> str:
-    return build_page(predictions, report, error, generated_at=_dt.datetime(2026, 9, 10, tzinfo=_dt.timezone.utc))
+    return build_page(predictions, report, error, record_updated=_dt.datetime(2026, 9, 10, tzinfo=_dt.timezone.utc))
 
 
 def test_a_miss_is_rendered_as_prominently_as_a_hit():
@@ -179,3 +179,17 @@ def test_chart_has_a_text_alternative():
 @pytest.mark.parametrize("value,expected", [(None, "—"), (0.25, "0.2500"), (0.1633333, "0.1633")])
 def test_fmt_score(value, expected):
     assert fmt_score(value) == expected
+
+
+def test_the_page_is_reproducible_for_unchanged_records():
+    """Two builds of the same records must be byte-identical.
+
+    Otherwise the CI check for a stale dashboard can never pass, and every rebuild produces a
+    diff that hides what actually changed.
+    """
+    predictions = [make(80, True), make(45)]
+    stamp = _dt.datetime(2026, 9, 10, tzinfo=_dt.timezone.utc)
+    first = build_page(predictions, CLEAN_REPORT, None, record_updated=stamp)
+    second = build_page(predictions, CLEAN_REPORT, None, record_updated=stamp)
+    assert first == second
+    assert "last changed 2026-09-10" in first

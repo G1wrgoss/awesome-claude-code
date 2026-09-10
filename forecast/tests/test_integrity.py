@@ -97,6 +97,7 @@ def test_editing_the_probability_after_the_fact_is_caught(repo):
     assert not report.ok
     joined = " ".join(report.verdicts[0].problems)
     assert "locked field 'probability' was changed" in joined
+    assert joined.count("locked field 'probability'") == 1, "one message per field, not one per revision"
     assert "65" in joined and "95" in joined
 
 

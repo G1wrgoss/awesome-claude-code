@@ -172,12 +172,17 @@ def verify_prediction(repo: Path, prediction: Prediction) -> FileVerdict:
     current["created_at"] = prediction.created_at.isoformat()
     current["resolves_on"] = prediction.resolves_on.isoformat()
 
-    for sha, _date in commits:
+    # One message per changed field, citing the earliest revision that disagrees, rather than
+    # one per field per revision -- the same edit repeated across ten commits is one edit.
+    earliest_difference: dict[str, tuple[str, object]] = {}
+    for sha, _date in reversed(commits):  # oldest first
         historical = _blob_at(repo, sha, relpath)
         if historical is None:
             verdict.problems.append(f"revision {sha[:10]} could not be read or parsed as JSON.")
             continue
         for field_name in LOCKED_FIELDS:
+            if field_name in earliest_difference:
+                continue
             was = historical.get(field_name)
             now = current[field_name]
             if isinstance(now, str) and isinstance(was, str):
@@ -185,10 +190,16 @@ def verify_prediction(repo: Path, prediction: Prediction) -> FileVerdict:
             else:
                 changed = was != now
             if changed:
-                verdict.problems.append(
-                    f"locked field '{field_name}' was changed after creation: revision "
-                    f"{sha[:10]} had {was!r}, the current file has {now!r}."
-                )
+                earliest_difference[field_name] = (sha, was)
+
+    for field_name in LOCKED_FIELDS:
+        if field_name not in earliest_difference:
+            continue
+        sha, was = earliest_difference[field_name]
+        verdict.problems.append(
+            f"locked field '{field_name}' was changed after creation: revision {sha[:10]} "
+            f"recorded {was!r}, the current file has {current[field_name]!r}."
+        )
     return verdict
 
 

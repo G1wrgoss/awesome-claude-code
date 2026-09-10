@@ -738,12 +738,18 @@ def build_page(
     predictions: list[Prediction],
     report: Report | None,
     integrity_error: str | None = None,
-    generated_at: _dt.datetime | None = None,
+    record_updated: _dt.datetime | None = None,
 ) -> str:
+    """Render the page.
+
+    `record_updated` is when the prediction records last changed, not when this HTML was
+    compiled. Dating the build instead would make the output differ on every run, which both
+    obscures what actually changed and defeats the CI check for a stale dashboard.
+    """
     result = standing(predictions)
     buckets = calibration(predictions)
     rolling = rolling_brier(predictions)
-    stamp = (generated_at or _dt.datetime.now(_dt.timezone.utc)).replace(microsecond=0)
+    stamp = (record_updated or _dt.datetime.now(_dt.timezone.utc)).replace(microsecond=0)
 
     example_count = sum(1 for p in predictions if p.example)
     notice = ""
@@ -833,7 +839,7 @@ def build_page(
       are never rewritten; only the outcome and its note are added later. A verification script
       re-reads every historical revision of every record on each build and reports above.
     </p>
-    <p>Page generated {e(stamp.isoformat())} from {result.total} record{"" if result.total == 1 else "s"}.</p>
+    <p>{result.total} record{"" if result.total == 1 else "s"}, last changed {e(stamp.date().isoformat())}.</p>
   </div>
 </footer>
 </body>
@@ -846,9 +852,10 @@ def write_site(
     report: Report | None,
     output: Path,
     integrity_error: str | None = None,
+    record_updated: _dt.datetime | None = None,
 ) -> Path:
     output.mkdir(parents=True, exist_ok=True)
     index = output / "index.html"
-    index.write_text(build_page(predictions, report, integrity_error), encoding="utf-8")
+    index.write_text(build_page(predictions, report, integrity_error, record_updated), encoding="utf-8")
     (output / ".nojekyll").write_text("", encoding="utf-8")
     return index

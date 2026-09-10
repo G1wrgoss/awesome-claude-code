@@ -1,0 +1,49 @@
+# Verification for the forecasting tracker (forecast/).
+#
+# Scoped by path so it never runs on the awesome-list's own commits. The point of running the
+# integrity check in CI rather than only locally is that a reader can see it ran: a retroactive
+# edit to a locked field turns this job red in public.
+name: forecast tracker
+
+on:
+  push:
+    paths: ['forecast/**', 'docs/**', '.github/workflows/forecast-tracker.yml']
+  pull_request:
+    paths: ['forecast/**', 'docs/**', '.github/workflows/forecast-tracker.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Verification reads every historical revision of every prediction file, so the
+          # full history is required. A shallow clone would silently pass.
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install pytest
+        run: python -m pip install --quiet pytest
+
+      - name: Run the test suite
+        run: python -m pytest forecast/tests -q
+
+      - name: Verify every record against git history
+        run: python forecast/bin/verify
+
+      - name: Check the published dashboard is not stale
+        run: |
+          python forecast/bin/build-site
+          if ! git diff --quiet -- docs; then
+            echo "::error::docs/ is out of date. Run 'cd forecast && make site' and commit the result."
+            git diff --stat -- docs
+            exit 1
+          fi
+          echo "docs/ matches the prediction records."
