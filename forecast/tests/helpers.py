@@ -18,6 +18,7 @@ def make(
     created_at: str = "2026-01-01",
     resolves_on: str = "2026-06-01",
     resolved_at: str | None = "2026-06-02",
+    example: bool = False,
     claim: str = "PLACEHOLDER INDEX (example) prints at or above 2.0% in the stated release.",
     reasoning: str = "Placeholder rationale sentence one. Placeholder rationale sentence two.",
 ) -> Prediction:
@@ -35,6 +36,6 @@ def make(
         outcome=outcome,
         resolved_at=_dt.date.fromisoformat(resolved_at) if resolved and resolved_at else None,
         resolution_note="Placeholder resolution note." if resolved else None,
-        example=True,
+        example=example,
         path=Path(f"predictions/{identifier}.json"),
     )

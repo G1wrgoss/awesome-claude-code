@@ -30,12 +30,23 @@ THIN_BUCKET = 5
 _Z_90 = 1.6448536269514722
 
 
+def scored(predictions: Iterable[Prediction]) -> list[Prediction]:
+    """The records that count toward the track record.
+
+    Example records are placeholders with fabricated outcomes, seeded so a fresh deployment has
+    something to display. Letting them reach the scoring maths would put invented results into
+    the headline number, which is precisely the kind of flattery this project exists to avoid.
+    Every scoring function filters through here rather than trusting its callers to remember.
+    """
+    return [p for p in predictions if not p.example]
+
+
 def brier_score(predictions: Sequence[Prediction]) -> float | None:
     """Mean squared error between stated probability and outcome. Lower is better.
 
     Returns None when nothing has resolved -- callers must render that as "no data", never as 0.
     """
-    resolved = [p for p in predictions if p.resolved]
+    resolved = [p for p in scored(predictions) if p.resolved]
     if not resolved:
         return None
     total = 0.0
@@ -123,7 +134,7 @@ def calibration(predictions: Iterable[Prediction]) -> list[CalibrationBucket]:
     hits = [0] * BUCKET_COUNT
     stated_totals = [0.0] * BUCKET_COUNT
 
-    for prediction in predictions:
+    for prediction in scored(predictions):
         if not prediction.resolved:
             continue
         index = bucket_index(prediction.probability)
@@ -174,7 +185,7 @@ def rolling_brier(predictions: Sequence[Prediction]) -> list[RollingPoint]:
     window is mostly noise.
     """
     resolved = sorted(
-        (p for p in predictions if p.resolved),
+        (p for p in scored(predictions) if p.resolved),
         key=lambda p: (p.resolved_at, p.sequence),
     )
     points: list[RollingPoint] = []
@@ -196,7 +207,7 @@ def rolling_brier(predictions: Sequence[Prediction]) -> list[RollingPoint]:
 
 @dataclass(frozen=True)
 class Standing:
-    total: int
+    total: int          # real records; example records are excluded throughout
     resolved: int
     open: int
     brier: float | None
@@ -204,19 +215,22 @@ class Standing:
     skill: float | None
     hits: int
     misses: int
+    examples: int       # listed on the page, counted in nothing
 
 
 def standing(predictions: Sequence[Prediction]) -> Standing:
     """The headline numbers. Open predictions are counted, never hidden."""
-    resolved = [p for p in predictions if p.resolved]
+    real = scored(predictions)
+    resolved = [p for p in real if p.resolved]
     brier = brier_score(predictions)
     return Standing(
-        total=len(predictions),
+        total=len(real),
         resolved=len(resolved),
-        open=len(predictions) - len(resolved),
+        open=len(real) - len(resolved),
         brier=brier,
         baseline=BASELINE_BRIER,
         skill=skill_score(brier),
         hits=sum(1 for p in resolved if p.outcome),
         misses=sum(1 for p in resolved if not p.outcome),
+        examples=len(predictions) - len(real),
     )

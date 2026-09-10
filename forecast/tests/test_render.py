@@ -97,7 +97,7 @@ def test_reasoning_is_present_but_behind_a_disclosure():
 
 
 def test_example_records_are_flagged_on_the_page():
-    html = page([make(50, True)])
+    html = page([make(50, True, example=True)])
     assert "example record" in html
     assert "placeholder text, not real forecasts" in html
 
@@ -193,3 +193,35 @@ def test_the_page_is_reproducible_for_unchanged_records():
     second = build_page(predictions, CLEAN_REPORT, None, record_updated=stamp)
     assert first == second
     assert "last changed 2026-09-10" in first
+
+
+def test_a_page_of_only_examples_shows_empty_figures_and_says_why():
+    html = page([make(75, True, example=True), make(65, False, example=True)])
+    assert "Every record here is an example" in html
+    assert "There is no track record to score yet" in html
+    assert "No resolved predictions yet" in html   # the chart's empty state
+    assert "0.0000" not in html                    # never a flattering number
+    assert html.count('class="entry ') == 2        # still listed in the log
+
+
+def test_mixed_records_score_only_the_real_ones_and_the_page_says_so():
+    html = page([make(80, True), make(90), make(50, True, example=True)])
+    assert "0.0400" in html                        # (0.8 - 1)^2, the real record alone
+    assert "1 of these records are examples" in html
+    assert "excluded from every figure above" in html
+    assert "Excludes 1 example record" in html
+    assert html.count('class="entry ') == 3        # all three still listed
+
+
+def test_log_heading_describes_what_is_listed_not_what_is_scored():
+    """The log shows every record; the Standing counts only real ones. The heading must not lie."""
+    html = page([make(80, True), make(90), make(50, True, example=True)])
+    assert "1 open and 2 resolved" in html
+    assert "including 1 example record that count" in html
+
+
+def test_footer_counts_what_the_page_lists_not_what_it_scores():
+    """Saying '0 records' under three visible entries reads as a bug even though the maths is right."""
+    html = page([make(80, True), make(50, True, example=True)])
+    assert "2 records listed" in html
+    assert "0 records" not in html

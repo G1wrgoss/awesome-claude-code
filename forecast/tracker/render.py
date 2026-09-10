@@ -397,7 +397,14 @@ def _standing_block(result: Standing) -> str:
         f"<dd class='figure-note'>{e(note)}</dd></div>"
         for label, value, note in cells
     )
-    return f"<dl class='standing'>{figures}</dl>"
+    block = f"<dl class='standing'>{figures}</dl>"
+    if result.examples:
+        block += (
+            f"<p class='standing-note'>Excludes {result.examples} example record"
+            f"{'' if result.examples == 1 else 's'}, which carry invented outcomes and are "
+            "counted in none of these figures.</p>"
+        )
+    return block
 
 
 def _outcome_mark(prediction: Prediction) -> str:
@@ -586,6 +593,10 @@ h2 .h2-note {{ font-weight: 400; color: var(--ink-soft); }}
 }}
 .figure-note {{ margin: 5px 0 0; font-size: 0.79rem; color: var(--ink-faint); }}
 
+.standing-note {{
+  margin: 12px 0 0; font-size: 0.82rem; color: var(--ink-faint); max-width: var(--measure);
+}}
+
 .rolling-row {{
   display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 320px);
   gap: 40px; align-items: end; margin-top: 34px;
@@ -691,7 +702,11 @@ footer p {{ margin: 0 0 8px; max-width: var(--measure); }}
   .standing {{ grid-template-columns: repeat(2, 1fr); }}
   .figure {{ border-left: none; border-top: var(--rule); padding-left: 0; }}
   .figure:first-child, .figure:nth-child(2) {{ border-top: none; }}
-  .rolling-row {{ grid-template-columns: 1fr; gap: 20px; align-items: start; }}
+  .standing-note {{
+  margin: 12px 0 0; font-size: 0.82rem; color: var(--ink-faint); max-width: var(--measure);
+}}
+
+.rolling-row {{ grid-template-columns: 1fr; gap: 20px; align-items: start; }}
 }}
 
 @media (max-width: 720px) {{
@@ -751,16 +766,37 @@ def build_page(
     rolling = rolling_brier(predictions)
     stamp = (record_updated or _dt.datetime.now(_dt.timezone.utc)).replace(microsecond=0)
 
-    example_count = sum(1 for p in predictions if p.example)
+    example_count = result.examples
     notice = ""
     if example_count:
         all_examples = example_count == len(predictions)
+        headline = (
+            "Every record here is an example."
+            if all_examples
+            else f"{example_count} of these records are examples."
+        )
+        consequence = (
+            "There is no track record to score yet: every figure above is empty because no real "
+            "prediction has been made."
+            if all_examples
+            else "They are listed below but excluded from every figure above."
+        )
         notice = (
-            f"<div class='notice'><strong>{'Every record here is an example.' if all_examples else f'{example_count} of these records are examples.'}</strong> "
+            f"<div class='notice'><strong>{headline}</strong> "
             "They contain placeholder text, not real forecasts. The indicators and sources they "
             "name are fictional and no economic data was consulted to write or resolve them. "
+            f"{consequence} "
             "They exist so the dashboard has something to render before a real record begins.</div>"
         )
+
+    listed_resolved = sum(1 for p in predictions if p.resolved)
+    listed_open = len(predictions) - listed_resolved
+    listed_examples = (
+        f", including {example_count} example record{'' if example_count == 1 else 's'} "
+        "that count toward none of the figures above"
+        if example_count
+        else ""
+    )
 
     entries = "\n".join(_log_entry(p) for p in predictions) or (
         "<p class='entry-meta'>No predictions have been recorded yet.</p>"
@@ -794,7 +830,7 @@ def build_page(
 <main>
   <section class="standing-section">
     <div class="wrap">
-      <h2>Standing <span class="h2-note">&mdash; all predictions, resolved and open</span></h2>
+      <h2>Standing <span class="h2-note">&mdash; every real prediction, resolved and open</span></h2>
       {_standing_block(result)}
       <div class="rolling-row">
         <div>{rolling_svg(rolling)}</div>
@@ -825,7 +861,7 @@ def build_page(
 
   <section id="log">
     <div class="wrap">
-      <h2>The log <span class="h2-note">&mdash; newest first, {result.open} open and {result.resolved} resolved, nothing withheld</span></h2>
+      <h2>The log <span class="h2-note">&mdash; newest first, {listed_open} open and {listed_resolved} resolved, nothing withheld{listed_examples}</span></h2>
       {entries}
     </div>
   </section>
@@ -839,7 +875,7 @@ def build_page(
       are never rewritten; only the outcome and its note are added later. A verification script
       re-reads every historical revision of every record on each build and reports above.
     </p>
-    <p>{result.total} record{"" if result.total == 1 else "s"}, last changed {e(stamp.date().isoformat())}.</p>
+    <p>{len(predictions)} record{"" if len(predictions) == 1 else "s"} listed, last changed {e(stamp.date().isoformat())}.</p>
   </div>
 </footer>
 </body>

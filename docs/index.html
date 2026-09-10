@@ -120,6 +120,10 @@ h2 .h2-note { font-weight: 400; color: var(--ink-soft); }
 }
 .figure-note { margin: 5px 0 0; font-size: 0.79rem; color: var(--ink-faint); }
 
+.standing-note {
+  margin: 12px 0 0; font-size: 0.82rem; color: var(--ink-faint); max-width: var(--measure);
+}
+
 .rolling-row {
   display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 320px);
   gap: 40px; align-items: end; margin-top: 34px;
@@ -225,7 +229,11 @@ footer p { margin: 0 0 8px; max-width: var(--measure); }
   .standing { grid-template-columns: repeat(2, 1fr); }
   .figure { border-left: none; border-top: var(--rule); padding-left: 0; }
   .figure:first-child, .figure:nth-child(2) { border-top: none; }
-  .rolling-row { grid-template-columns: 1fr; gap: 20px; align-items: start; }
+  .standing-note {
+  margin: 12px 0 0; font-size: 0.82rem; color: var(--ink-faint); max-width: var(--measure);
+}
+
+.rolling-row { grid-template-columns: 1fr; gap: 20px; align-items: start; }
 }
 
 @media (max-width: 720px) {
@@ -278,29 +286,17 @@ footer p { margin: 0 0 8px; max-width: var(--measure); }
       is known, locked by commit, and scored afterwards whether they went well or badly.
     </p>
     <p class='integrity integrity--ok'><span class='integrity-mark'>&#10003;</span>All 3 records match their first commit date, and no locked field has changed since the commit that created it.</p><p class='caveat'>Git author dates are written by the committer and can be backdated on a local machine. These checks prove each record is consistent with its own commit history; independent proof of timing is the host&#x27;s public push log, which the repository owner cannot rewrite.</p>
-    <div class='notice'><strong>Every record here is an example.</strong> They contain placeholder text, not real forecasts. The indicators and sources they name are fictional and no economic data was consulted to write or resolve them. They exist so the dashboard has something to render before a real record begins.</div>
+    <div class='notice'><strong>Every record here is an example.</strong> They contain placeholder text, not real forecasts. The indicators and sources they name are fictional and no economic data was consulted to write or resolve them. There is no track record to score yet: every figure above is empty because no real prediction has been made. They exist so the dashboard has something to render before a real record begins.</div>
   </div>
 </header>
 
 <main>
   <section class="standing-section">
     <div class="wrap">
-      <h2>Standing <span class="h2-note">&mdash; all predictions, resolved and open</span></h2>
-      <dl class='standing'><div class='figure'><dt>Brier score</dt><dd class='figure-value num'>0.2425</dd><dd class='figure-note'>lower is better</dd></div><div class='figure'><dt>Baseline</dt><dd class='figure-value num'>0.2500</dd><dd class='figure-note'>always saying 50%</dd></div><div class='figure'><dt>Skill vs baseline</dt><dd class='figure-value num'>+3.0%</dd><dd class='figure-note'>share of baseline error removed</dd></div><div class='figure'><dt>Resolved</dt><dd class='figure-value num'>2</dd><dd class='figure-note'>1 affirmed, 1 refuted</dd></div><div class='figure'><dt>Open</dt><dd class='figure-value num'>1</dd><dd class='figure-note'>not yet settled</dd></div></dl>
+      <h2>Standing <span class="h2-note">&mdash; every real prediction, resolved and open</span></h2>
+      <dl class='standing'><div class='figure'><dt>Brier score</dt><dd class='figure-value num'>—</dd><dd class='figure-note'>lower is better</dd></div><div class='figure'><dt>Baseline</dt><dd class='figure-value num'>0.2500</dd><dd class='figure-note'>always saying 50%</dd></div><div class='figure'><dt>Skill vs baseline</dt><dd class='figure-value num'>—</dd><dd class='figure-note'>share of baseline error removed</dd></div><div class='figure'><dt>Resolved</dt><dd class='figure-value num'>0</dd><dd class='figure-note'>0 affirmed, 0 refuted</dd></div><div class='figure'><dt>Open</dt><dd class='figure-value num'>0</dd><dd class='figure-note'>not yet settled</dd></div></dl><p class='standing-note'>Excludes 3 example records, which carry invented outcomes and are counted in none of these figures.</p>
       <div class="rolling-row">
-        <div><svg viewBox="0 0 640 170" class="rolling" role="img" aria-label="Cumulative Brier score after each of 2 resolutions, against the 0.25 baseline. Lower is better.">
-<line x1="44" y1="18" x2="44" y2="136" stroke="#8f9ca7" stroke-width="1"/>
-<line x1="44" y1="136" x2="624" y2="136" stroke="#8f9ca7" stroke-width="1"/>
-<line x1="44" y1="38.7" x2="624" y2="38.7" stroke="#9a7b3f" stroke-width="1.5" stroke-dasharray="6 5"/>
-<text x="50" y="30.7" text-anchor="start" class="roll-note" fill="#9a7b3f">baseline 0.2500</text>
-<text x="36" y="140.0" text-anchor="end" class="roll-tick" fill="#8f9ca7">0.00</text>
-<text x="36" y="22.0" text-anchor="end" class="roll-tick" fill="#8f9ca7">0.30</text>
-<polyline points="44.0,111.7 624.0,41.6" fill="none" stroke="#16222f" stroke-width="2.5"/>
-<circle cx="44.0" cy="111.7" r="4" fill="#16222f"/>
-<circle cx="624.0" cy="41.6" r="4" fill="#16222f"/>
-<text x="624.0" y="29.6" text-anchor="end" class="roll-value" fill="#16222f">0.2425</text>
-<text x="334.0" y="162" text-anchor="middle" class="roll-note" fill="#5b6b79">resolutions, in order (2)</text>
-</svg></div>
+        <div><svg viewBox="0 0 640 170" class="rolling" role="img" aria-label="Rolling Brier score: no resolved predictions yet."><text x="320.0" y="85.0" text-anchor="middle" class="roll-note" fill="#5b6b79">Nothing resolved yet</text></svg></div>
         <p class="rolling-caption">
           The cumulative Brier score after each resolution. It should sit below the dashed
           baseline; if it does not, the forecasts are worse than saying 50% to everything.
@@ -315,7 +311,7 @@ footer p { margin: 0 0 8px; max-width: var(--measure); }
       <h2>Calibration <span class="h2-note">&mdash; stated confidence against what actually happened</span></h2>
       <div class="panel"><svg viewBox="0 0 960 580" class="calibration" role="img" aria-labelledby="cal-title cal-desc" preserveAspectRatio="xMidYMid meet">
 <title id="cal-title">Calibration curve</title>
-<desc id="cal-desc">Stated confidence on the horizontal axis against observed frequency on the vertical axis, for 2 resolved predictions. A perfectly calibrated forecaster sits on the diagonal. Vertical bars are Wilson 90 per cent intervals. The same numbers are given in the table below the chart.</desc>
+<desc id="cal-desc">Stated confidence on the horizontal axis against observed frequency on the vertical axis, for 0 resolved predictions. A perfectly calibrated forecaster sits on the diagonal. Vertical bars are Wilson 90 per cent intervals. The same numbers are given in the table below the chart.</desc>
 <rect width="960" height="580" fill="#16222f"/>
 <line x1="92.0" y1="44" x2="92.0" y2="488" stroke="#9a7b3f" stroke-width="1" opacity="0.45"/>
 <line x1="92" y1="488.0" x2="920" y2="488.0" stroke="#9a7b3f" stroke-width="1" opacity="0.45"/>
@@ -356,21 +352,13 @@ footer p { margin: 0 0 8px; max-width: var(--measure); }
 <text x="78" y="49.0" text-anchor="end" class="cal-tick" fill="#8f9ca7">100</text>
 <text x="506.0" y="546.0" text-anchor="middle" class="cal-axis" fill="#f2efe9">stated confidence (%)</text>
 <text transform="translate(34,266.0) rotate(-90)" text-anchor="middle" class="cal-axis" fill="#f2efe9">observed frequency (%)</text>
-<line x1="630.2" y1="488.0" x2="630.2" y2="163.8" stroke="#c9a45c" stroke-width="2" stroke-dasharray="4 4" opacity="0.55"/>
-<line x1="623.2" y1="488.0" x2="637.2" y2="488.0" stroke="#c9a45c" stroke-width="2" opacity="0.55"/>
-<line x1="623.2" y1="163.8" x2="637.2" y2="163.8" stroke="#c9a45c" stroke-width="2" opacity="0.55"/>
-<line x1="713.0" y1="368.2" x2="713.0" y2="44.0" stroke="#c9a45c" stroke-width="2" stroke-dasharray="4 4" opacity="0.55"/>
-<line x1="706.0" y1="368.2" x2="720.0" y2="368.2" stroke="#c9a45c" stroke-width="2" opacity="0.55"/>
-<line x1="706.0" y1="44.0" x2="720.0" y2="44.0" stroke="#c9a45c" stroke-width="2" opacity="0.55"/>
-<circle cx="630.2" cy="488.0" r="8.6" fill="none" stroke="#f2efe9" stroke-width="2" stroke-dasharray="3 3" opacity="0.75"/>
-<text x="647.8" y="480.0" text-anchor="start" class="cal-count" fill="#8f9ca7">n=1 (thin)</text>
-<circle cx="713.0" cy="44.0" r="8.6" fill="none" stroke="#f2efe9" stroke-width="2" stroke-dasharray="3 3" opacity="0.75"/>
-<text x="730.6" y="60.0" text-anchor="start" class="cal-count" fill="#8f9ca7">n=1 (thin)</text>
+<text x="506.0" y="258.0" text-anchor="middle" class="cal-empty" fill="#f2efe9">No resolved predictions yet</text>
+<text x="506.0" y="288.0" text-anchor="middle" class="cal-note" fill="#8f9ca7">The curve appears once predictions begin to resolve.</text>
 </svg></div>
       <ul class='legend'><li><span class='swatch'><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6" fill="#16222f" stroke="#16222f" stroke-width="1.5"/></svg></span><span>bucket holding 5 or more resolved predictions, sized by count</span></li><li><span class='swatch'><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6" fill="none" stroke="#16222f" stroke-width="2" stroke-dasharray="3 3"/></svg></span><span>fewer than 5: shown, but too thin to read anything into</span></li><li><span class='swatch'><svg viewBox="0 0 16 16" aria-hidden="true"><line x1="8" y1="1" x2="8" y2="15" stroke="#9a7b3f" stroke-width="2"/><line x1="4" y1="1" x2="12" y2="1" stroke="#9a7b3f" stroke-width="2"/><line x1="4" y1="15" x2="12" y2="15" stroke="#9a7b3f" stroke-width="2"/></svg></span><span>Wilson 90% interval — tall bars mean the sample is too small to tell</span></li></ul>
       <details class="numbers">
         <summary>The numbers behind this chart</summary>
-        <div class="table-scroll"><table class='data-table'><caption>Calibration buckets. Ranges include the lower bound and exclude the upper, except the top bucket which includes 100%.</caption><thead><tr><th scope='col'>Stated</th><th scope='col'>Resolved</th><th scope='col'>Came true</th><th scope='col'>Mean stated</th><th scope='col'>Observed</th><th scope='col'>Note</th></tr></thead><tbody><tr class='is-empty'><th scope='row'>0-10%</th><td class='num'>0</td><td class='num'>—</td><td class='num'>—</td><td class='num'>—</td><td>no predictions in this range</td></tr><tr class='is-empty'><th scope='row'>10-20%</th><td class='num'>0</td><td class='num'>—</td><td class='num'>—</td><td class='num'>—</td><td>no predictions in this range</td></tr><tr class='is-empty'><th scope='row'>20-30%</th><td class='num'>0</td><td class='num'>—</td><td class='num'>—</td><td class='num'>—</td><td>no predictions in this range</td></tr><tr class='is-empty'><th scope='row'>30-40%</th><td class='num'>0</td><td class='num'>—</td><td class='num'>—</td><td class='num'>—</td><td>no predictions in this range</td></tr><tr class='is-empty'><th scope='row'>40-50%</th><td class='num'>0</td><td class='num'>—</td><td class='num'>—</td><td class='num'>—</td><td>no predictions in this range</td></tr><tr class='is-empty'><th scope='row'>50-60%</th><td class='num'>0</td><td class='num'>—</td><td class='num'>—</td><td class='num'>—</td><td>no predictions in this range</td></tr><tr><th scope='row'>60-70%</th><td class='num'>1</td><td class='num'>0</td><td class='num'>65.0%</td><td class='num'>0.0%</td><td>thin — 1 resolved, not meaningful</td></tr><tr><th scope='row'>70-80%</th><td class='num'>1</td><td class='num'>1</td><td class='num'>75.0%</td><td class='num'>100.0%</td><td>thin — 1 resolved, not meaningful</td></tr><tr class='is-empty'><th scope='row'>80-90%</th><td class='num'>0</td><td class='num'>—</td><td class='num'>—</td><td class='num'>—</td><td>no predictions in this range</td></tr><tr class='is-empty'><th scope='row'>90-100%</th><td class='num'>0</td><td class='num'>—</td><td class='num'>—</td><td class='num'>—</td><td>no predictions in this range</td></tr></tbody></table></div>
+        <div class="table-scroll"><table class='data-table'><caption>Calibration buckets. Ranges include the lower bound and exclude the upper, except the top bucket which includes 100%.</caption><thead><tr><th scope='col'>Stated</th><th scope='col'>Resolved</th><th scope='col'>Came true</th><th scope='col'>Mean stated</th><th scope='col'>Observed</th><th scope='col'>Note</th></tr></thead><tbody><tr class='is-empty'><th scope='row'>0-10%</th><td class='num'>0</td><td class='num'>—</td><td class='num'>—</td><td class='num'>—</td><td>no predictions in this range</td></tr><tr class='is-empty'><th scope='row'>10-20%</th><td class='num'>0</td><td class='num'>—</td><td class='num'>—</td><td class='num'>—</td><td>no predictions in this range</td></tr><tr class='is-empty'><th scope='row'>20-30%</th><td class='num'>0</td><td class='num'>—</td><td class='num'>—</td><td class='num'>—</td><td>no predictions in this range</td></tr><tr class='is-empty'><th scope='row'>30-40%</th><td class='num'>0</td><td class='num'>—</td><td class='num'>—</td><td class='num'>—</td><td>no predictions in this range</td></tr><tr class='is-empty'><th scope='row'>40-50%</th><td class='num'>0</td><td class='num'>—</td><td class='num'>—</td><td class='num'>—</td><td>no predictions in this range</td></tr><tr class='is-empty'><th scope='row'>50-60%</th><td class='num'>0</td><td class='num'>—</td><td class='num'>—</td><td class='num'>—</td><td>no predictions in this range</td></tr><tr class='is-empty'><th scope='row'>60-70%</th><td class='num'>0</td><td class='num'>—</td><td class='num'>—</td><td class='num'>—</td><td>no predictions in this range</td></tr><tr class='is-empty'><th scope='row'>70-80%</th><td class='num'>0</td><td class='num'>—</td><td class='num'>—</td><td class='num'>—</td><td>no predictions in this range</td></tr><tr class='is-empty'><th scope='row'>80-90%</th><td class='num'>0</td><td class='num'>—</td><td class='num'>—</td><td class='num'>—</td><td>no predictions in this range</td></tr><tr class='is-empty'><th scope='row'>90-100%</th><td class='num'>0</td><td class='num'>—</td><td class='num'>—</td><td class='num'>—</td><td>no predictions in this range</td></tr></tbody></table></div>
       </details>
     </div>
   </section>
@@ -410,7 +398,7 @@ footer p { margin: 0 0 8px; max-width: var(--measure); }
 
   <section id="log">
     <div class="wrap">
-      <h2>The log <span class="h2-note">&mdash; newest first, 1 open and 2 resolved, nothing withheld</span></h2>
+      <h2>The log <span class="h2-note">&mdash; newest first, 1 open and 2 resolved, nothing withheld, including 3 example records that count toward none of the figures above</span></h2>
       
 <article class="entry entry--open">
   <div class="entry-id"><span class="num">P-0003</span><span class='tag'>example record</span></div>
@@ -480,7 +468,7 @@ footer p { margin: 0 0 8px; max-width: var(--measure); }
       are never rewritten; only the outcome and its note are added later. A verification script
       re-reads every historical revision of every record on each build and reports above.
     </p>
-    <p>3 records, last changed 2026-09-10.</p>
+    <p>3 records listed, last changed 2026-09-10.</p>
   </div>
 </footer>
 </body>

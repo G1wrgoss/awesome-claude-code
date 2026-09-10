@@ -262,3 +262,60 @@ def test_there_is_no_percentage_correct_metric():
     exported = dir(scoring)
     for forbidden in ("percent_correct", "percentage_correct", "accuracy", "hit_rate"):
         assert forbidden not in exported
+
+
+# --------------------------------------------------------------------------------------
+# Example records must never reach the maths
+# --------------------------------------------------------------------------------------
+
+def test_example_records_are_excluded_from_the_brier_score():
+    """Seeded placeholders carry invented outcomes. They must not move the headline number."""
+    real = [make(80, True), make(30, False), make(60, False)]
+    with_examples = [*real, make(5, True, example=True), make(95, False, example=True)]
+    assert brier_score(with_examples) == pytest.approx(0.49 / 3)
+    assert brier_score(with_examples) == brier_score(real)
+
+
+def test_a_record_set_that_is_only_examples_scores_none_not_a_number():
+    """A fresh deployment has no track record. It must say so rather than show a flattering score."""
+    only_examples = [make(75, True, example=True), make(65, False, example=True)]
+    assert brier_score(only_examples) is None
+    assert skill_score(brier_score(only_examples)) is None
+    assert rolling_brier(only_examples) == []
+    assert all(b.empty for b in calibration(only_examples))
+
+
+def test_example_records_are_excluded_from_calibration():
+    buckets = calibration([make(75, True), make(75, True, example=True), make(75, False, example=True)])
+    assert buckets[7].count == 1
+    assert buckets[7].hits == 1
+
+
+def test_example_records_are_excluded_from_the_rolling_series():
+    points = rolling_brier([
+        make(80, True, resolved_at="2026-06-02"),
+        make(10, False, resolved_at="2026-06-03", example=True),
+    ])
+    assert [p.brier_to_date for p in points] == pytest.approx([0.04])
+
+
+def test_standing_counts_examples_separately_and_excludes_them_everywhere_else():
+    predictions = [make(80, True), make(90), make(50, True, example=True), make(50, False, example=True)]
+    result = standing(predictions)
+    assert result.examples == 2
+    assert result.total == 2      # real records only
+    assert result.resolved == 1
+    assert result.open == 1
+    assert result.hits == 1
+    assert result.misses == 0
+    assert result.brier == pytest.approx(0.04)
+
+
+def test_every_scoring_entry_point_goes_through_the_example_filter():
+    """Guard against a future function that reads the raw list and reintroduces the bug."""
+    import inspect
+
+    source = inspect.getsource(scoring)
+    for function in ("def brier_score", "def calibration", "def rolling_brier", "def standing"):
+        body = source.split(function, 1)[1].split("\ndef ", 1)[0]
+        assert "scored(" in body, f"{function} does not filter example records"

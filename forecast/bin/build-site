@@ -54,7 +54,8 @@ def main() -> int:
     index = write_site(predictions, report, output, integrity_error, last_record_change(root))
     result = standing(predictions)
     print(f"wrote {index}")
-    print(f"  {result.total} record(s): {result.resolved} resolved, {result.open} open")
+    examples = f" (+{result.examples} example record(s), excluded from scoring)" if result.examples else ""
+    print(f"  {result.total} scored record(s): {result.resolved} resolved, {result.open} open{examples}")
     print(f"  Brier {result.brier if result.brier is not None else 'n/a'} against baseline {result.baseline}")
     if report is not None:
         print(f"  integrity: {report.summary}")
