@@ -1,0 +1,39 @@
+#!/usr/bin/env python3
+"""Check every prediction against git history. Exit 1 if anything fails."""
+
+from __future__ import annotations
+
+import sys
+
+from _common import PREDICTIONS_DIR, repo_root
+
+from tracker.integrity import GitUnavailable, verify_all
+from tracker.model import load_all
+
+
+def main() -> int:
+    root = repo_root()
+    predictions = load_all(PREDICTIONS_DIR)
+    try:
+        report = verify_all(root, predictions)
+    except GitUnavailable as exc:
+        print(f"verification could not run: {exc}", file=sys.stderr)
+        return 2
+
+    for verdict in report.verdicts:
+        if verdict.ok:
+            first = verdict.first_commit_date.isoformat() if verdict.first_commit_date else "?"
+            print(f"  ok    {verdict.prediction_id}  created {first}  "
+                  f"{verdict.revisions} revision(s)  locked fields unchanged")
+        else:
+            print(f"  FAIL  {verdict.prediction_id}")
+            for problem in verdict.problems:
+                print(f"          {problem}")
+
+    print(f"\n{report.summary}")
+    print(f"\nNote: {report.caveat}")
+    return 0 if report.ok else 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())

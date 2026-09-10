@@ -1,0 +1,487 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Forecast record</title>
+<meta name="description" content="A dated, locked, publicly scored record of probabilistic economic forecasts.">
+<meta name="robots" content="index, follow">
+<style>
+:root {
+  color-scheme: light;
+  --ink: #16222f;
+  --ink-soft: #5b6b79;
+  --ink-faint: #8f9ca7;
+  --paper: #f2efe9;
+  --paper-raised: #faf8f4;
+  --ochre: #9a7b3f;
+  --affirmed: #4a7350;
+  --refuted: #9c4b41;
+  --sans: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          "Helvetica Neue", "Liberation Sans", Arial, sans-serif;
+  --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Charter, "Bitstream Charter",
+           Georgia, "Liberation Serif", serif;
+  --measure: 68ch;
+  --rule: 1px solid rgba(22, 34, 47, 0.16);
+  --rule-strong: 1px solid rgba(22, 34, 47, 0.42);
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 16px;
+  line-height: 1.55;
+  font-variant-numeric: tabular-nums lining;
+  font-feature-settings: "tnum" 1, "lnum" 1;
+}
+
+/* Every numeral on the page is tabular and fixed-width, so columns align even where the
+   fallback face lacks true tabular figures. */
+.num, time, .figure-value, .data-table td, .data-table th {
+  font-variant-numeric: tabular-nums lining;
+  font-feature-settings: "tnum" 1, "lnum" 1;
+  letter-spacing: 0.01em;
+}
+
+.wrap { max-width: 1120px; margin: 0 auto; padding: 0 28px; }
+
+a { color: var(--ink); text-decoration-thickness: 1px; text-underline-offset: 3px; }
+a:hover { color: var(--ochre); }
+
+:focus-visible {
+  outline: 2px solid var(--ochre);
+  outline-offset: 3px;
+}
+
+.skip {
+  position: absolute; left: -9999px; top: 0;
+  background: var(--ink); color: var(--paper); padding: 12px 18px; z-index: 10;
+}
+.skip:focus { left: 0; }
+
+/* ---- masthead ---------------------------------------------------------------------- */
+.masthead { border-bottom: var(--rule-strong); padding: 42px 0 26px; }
+.masthead h1 {
+  font-size: clamp(1.55rem, 3.4vw, 2.15rem);
+  line-height: 1.15; margin: 0 0 10px; font-weight: 600; letter-spacing: -0.015em;
+}
+.standfirst {
+  margin: 0 0 20px; max-width: var(--measure);
+  color: var(--ink-soft); font-size: 1.02rem;
+}
+
+.integrity {
+  display: flex; gap: 10px; align-items: baseline;
+  margin: 0; padding: 12px 0 0; border-top: var(--rule);
+  max-width: var(--measure); font-size: 0.94rem;
+}
+.integrity-mark {
+  flex: none; width: 1.35em; height: 1.35em; line-height: 1.3em; text-align: center;
+  border: 1px solid currentColor; font-size: 0.85em;
+}
+.integrity--ok { color: var(--affirmed); }
+.integrity--bad, .integrity--unknown { color: var(--refuted); }
+.integrity-list { margin: 10px 0 0; padding-left: 20px; color: var(--refuted); font-size: 0.9rem; }
+.caveat {
+  margin: 10px 0 0; max-width: var(--measure);
+  font-family: var(--serif); font-size: 0.92rem; color: var(--ink-soft);
+}
+
+.notice {
+  margin: 22px 0 0; padding: 14px 18px;
+  border-left: 3px solid var(--ochre); background: var(--paper-raised);
+  max-width: var(--measure); font-size: 0.94rem;
+}
+.notice strong { font-weight: 600; }
+
+/* ---- section scaffolding ----------------------------------------------------------- */
+section { padding: 46px 0; border-top: var(--rule); }
+section:first-of-type { border-top: none; }
+h2 { font-size: 1.16rem; font-weight: 600; margin: 0 0 22px; letter-spacing: -0.005em; }
+h2 .h2-note { font-weight: 400; color: var(--ink-soft); }
+
+/* ---- standing ---------------------------------------------------------------------- */
+.standing {
+  display: grid; grid-template-columns: repeat(5, 1fr);
+  gap: 0; margin: 0; border-top: var(--rule-strong); border-bottom: var(--rule-strong);
+}
+.figure { padding: 18px 20px 16px; border-left: var(--rule); }
+.figure:first-child { border-left: none; padding-left: 0; }
+.figure dt { font-size: 0.79rem; color: var(--ink-soft); margin-bottom: 6px; }
+.figure-value {
+  margin: 0; font-size: clamp(1.5rem, 2.7vw, 1.95rem);
+  font-weight: 500; line-height: 1.1; letter-spacing: -0.02em;
+}
+.figure-note { margin: 5px 0 0; font-size: 0.79rem; color: var(--ink-faint); }
+
+.rolling-row {
+  display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 320px);
+  gap: 40px; align-items: end; margin-top: 34px;
+}
+.rolling { width: 100%; height: auto; display: block; }
+.rolling-caption { font-family: var(--serif); font-size: 0.92rem; color: var(--ink-soft); margin: 0; }
+.roll-note { font-size: 12px; font-family: var(--sans); }
+.roll-tick { font-size: 11px; font-family: var(--sans); }
+.roll-value { font-size: 14px; font-weight: 600; font-family: var(--sans); }
+
+/* ---- hero -------------------------------------------------------------------------- */
+.hero { padding-bottom: 20px; }
+.panel { background: #16222f; padding: 12px 12px 4px; }
+.calibration { width: 100%; height: auto; display: block; }
+.cal-tick { font-size: 14px; font-family: var(--sans); font-variant-numeric: tabular-nums; }
+.cal-axis { font-size: 15px; font-family: var(--sans); }
+.cal-count { font-size: 13px; font-family: var(--sans); font-variant-numeric: tabular-nums; }
+.cal-note { font-size: 13px; font-family: var(--sans); }
+.cal-empty { font-size: 22px; font-family: var(--sans); }
+
+.legend {
+  list-style: none; margin: 16px 0 0; padding: 0;
+  display: flex; flex-wrap: wrap; gap: 10px 34px;
+  font-size: 0.85rem; color: var(--ink-soft);
+}
+.legend li { display: flex; align-items: center; gap: 9px; }
+.legend .swatch { flex: none; width: 16px; height: 16px; }
+.legend svg { width: 16px; height: 16px; display: block; }
+
+details.numbers { margin-top: 20px; }
+details.numbers > summary {
+  cursor: pointer; font-size: 0.92rem; color: var(--ink-soft);
+  padding: 8px 0; border-bottom: var(--rule);
+}
+details.numbers > summary:hover { color: var(--ochre); }
+
+.table-scroll { overflow-x: auto; }
+.data-table { width: 100%; border-collapse: collapse; margin-top: 16px; font-size: 0.9rem; }
+.data-table caption {
+  text-align: left; color: var(--ink-soft); font-size: 0.86rem;
+  padding-bottom: 12px; max-width: var(--measure);
+}
+.data-table th, .data-table td { padding: 8px 14px 8px 0; text-align: left; border-bottom: var(--rule); }
+.data-table thead th { border-bottom: var(--rule-strong); font-weight: 600; font-size: 0.82rem; }
+.data-table .num { text-align: right; padding-right: 22px; }
+.data-table tbody th { font-weight: 500; }
+.data-table tr.is-empty { color: var(--ink-faint); }
+
+/* ---- explainer --------------------------------------------------------------------- */
+.explainer { font-family: var(--serif); }
+.explainer h2 { font-family: var(--sans); }
+.explainer p { max-width: var(--measure); font-size: 1.03rem; line-height: 1.66; margin: 0 0 18px; }
+.explainer strong { font-weight: 600; }
+
+/* ---- the log ----------------------------------------------------------------------- */
+.entry {
+  display: grid;
+  grid-template-columns: 7.5rem minmax(0, 1fr) 5rem 7.5rem;
+  gap: 0 24px; padding: 22px 0; border-bottom: var(--rule); align-items: start;
+}
+.entry:first-of-type { border-top: var(--rule-strong); }
+.entry-id { font-size: 0.86rem; color: var(--ink-soft); }
+.tag {
+  display: block; margin-top: 6px; font-size: 0.7rem; color: var(--ochre);
+  border: 1px solid currentColor; padding: 1px 5px; width: fit-content;
+}
+.entry-claim { margin: 0 0 8px; font-size: 1.01rem; line-height: 1.45; }
+.entry-meta {
+  margin: 0; font-size: 0.82rem; color: var(--ink-soft);
+  display: flex; flex-wrap: wrap; gap: 4px 20px;
+}
+.entry-resolution {
+  margin: 12px 0 0; font-size: 0.92rem; padding-left: 14px;
+  border-left: 2px solid var(--ink-faint); max-width: var(--measure);
+}
+.entry--resolved .entry-resolution { border-left-color: currentColor; }
+.entry-reasoning { margin-top: 12px; }
+.entry-reasoning > summary {
+  cursor: pointer; font-size: 0.86rem; color: var(--ink-soft); width: fit-content;
+}
+.entry-reasoning > summary:hover { color: var(--ochre); }
+.entry-reasoning p {
+  margin: 10px 0 0; font-family: var(--serif); font-size: 0.98rem;
+  max-width: var(--measure); padding-left: 14px; border-left: 1px solid var(--ink-faint);
+}
+.entry-probability { text-align: right; font-size: 1.5rem; font-weight: 500; letter-spacing: -0.02em; }
+.entry-probability .pct { font-size: 0.85rem; color: var(--ink-soft); margin-left: 1px; }
+.entry-outcome { text-align: right; padding-top: 6px; }
+
+.mark { font-size: 0.86rem; white-space: nowrap; }
+.mark--true { color: var(--affirmed); }
+.mark--false { color: var(--refuted); }
+.mark--open { color: var(--ink-faint); }
+
+footer {
+  border-top: var(--rule-strong); padding: 30px 0 60px;
+  font-size: 0.86rem; color: var(--ink-soft);
+}
+footer p { margin: 0 0 8px; max-width: var(--measure); }
+
+/* ---- responsive -------------------------------------------------------------------- */
+@media (max-width: 900px) {
+  .standing { grid-template-columns: repeat(2, 1fr); }
+  .figure { border-left: none; border-top: var(--rule); padding-left: 0; }
+  .figure:first-child, .figure:nth-child(2) { border-top: none; }
+  .rolling-row { grid-template-columns: 1fr; gap: 20px; align-items: start; }
+}
+
+@media (max-width: 720px) {
+  /* The chart scales by viewBox, so its type must scale up to stay legible on a phone. */
+  .cal-tick { font-size: 26px; }
+  .cal-axis { font-size: 28px; }
+  .cal-count { font-size: 25px; }
+  .cal-note { font-size: 25px; }
+  .cal-empty { font-size: 34px; }
+  .legend { gap: 8px 20px; font-size: 0.82rem; }
+  .wrap { padding: 0 18px; }
+  section { padding: 32px 0; }
+  .entry { grid-template-columns: 1fr auto; gap: 4px 16px; }
+  .entry-id { grid-column: 1; grid-row: 1; }
+  .entry-outcome { grid-column: 2; grid-row: 1; text-align: right; padding-top: 0; }
+  .entry-body { grid-column: 1 / -1; grid-row: 2; margin-top: 8px; }
+  .entry-probability { grid-column: 1 / -1; grid-row: 3; text-align: left; margin-top: 10px; }
+  .tag { display: inline-block; margin-top: 0; margin-left: 8px; }
+  .panel { padding: 6px 6px 2px; margin: 0 -18px; }
+}
+
+@media (max-width: 480px) {
+  .standing { grid-template-columns: 1fr; }
+  .figure { border-top: var(--rule); }
+  .figure:nth-child(2) { border-top: var(--rule); }
+  .figure:first-child { border-top: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important; animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important; scroll-behavior: auto !important;
+  }
+}
+
+@media print {
+  .panel { background: #16222f !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .entry-reasoning[open] { break-inside: avoid; }
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#log">Skip to the prediction log</a>
+
+<header class="masthead">
+  <div class="wrap">
+    <h1>Forecast record</h1>
+    <p class="standfirst">
+      Dated probabilistic predictions about economic indicators, written down before the outcome
+      is known, locked by commit, and scored afterwards whether they went well or badly.
+    </p>
+    <p class='integrity integrity--ok'><span class='integrity-mark'>&#10003;</span>All 3 records match their first commit date, and no locked field has changed since the commit that created it.</p><p class='caveat'>Git author dates are written by the committer and can be backdated on a local machine. These checks prove each record is consistent with its own commit history; independent proof of timing is the host&#x27;s public push log, which the repository owner cannot rewrite.</p>
+    <div class='notice'><strong>Every record here is an example.</strong> They contain placeholder text, not real forecasts. The indicators and sources they name are fictional and no economic data was consulted to write or resolve them. They exist so the dashboard has something to render before a real record begins.</div>
+  </div>
+</header>
+
+<main>
+  <section class="standing-section">
+    <div class="wrap">
+      <h2>Standing <span class="h2-note">&mdash; all predictions, resolved and open</span></h2>
+      <dl class='standing'><div class='figure'><dt>Brier score</dt><dd class='figure-value num'>0.2425</dd><dd class='figure-note'>lower is better</dd></div><div class='figure'><dt>Baseline</dt><dd class='figure-value num'>0.2500</dd><dd class='figure-note'>always saying 50%</dd></div><div class='figure'><dt>Skill vs baseline</dt><dd class='figure-value num'>+3.0%</dd><dd class='figure-note'>share of baseline error removed</dd></div><div class='figure'><dt>Resolved</dt><dd class='figure-value num'>2</dd><dd class='figure-note'>1 affirmed, 1 refuted</dd></div><div class='figure'><dt>Open</dt><dd class='figure-value num'>1</dd><dd class='figure-note'>not yet settled</dd></div></dl>
+      <div class="rolling-row">
+        <div><svg viewBox="0 0 640 170" class="rolling" role="img" aria-label="Cumulative Brier score after each of 2 resolutions, against the 0.25 baseline. Lower is better.">
+<line x1="44" y1="18" x2="44" y2="136" stroke="#8f9ca7" stroke-width="1"/>
+<line x1="44" y1="136" x2="624" y2="136" stroke="#8f9ca7" stroke-width="1"/>
+<line x1="44" y1="38.7" x2="624" y2="38.7" stroke="#9a7b3f" stroke-width="1.5" stroke-dasharray="6 5"/>
+<text x="50" y="30.7" text-anchor="start" class="roll-note" fill="#9a7b3f">baseline 0.2500</text>
+<text x="36" y="140.0" text-anchor="end" class="roll-tick" fill="#8f9ca7">0.00</text>
+<text x="36" y="22.0" text-anchor="end" class="roll-tick" fill="#8f9ca7">0.30</text>
+<polyline points="44.0,111.7 624.0,41.6" fill="none" stroke="#16222f" stroke-width="2.5"/>
+<circle cx="44.0" cy="111.7" r="4" fill="#16222f"/>
+<circle cx="624.0" cy="41.6" r="4" fill="#16222f"/>
+<text x="624.0" y="29.6" text-anchor="end" class="roll-value" fill="#16222f">0.2425</text>
+<text x="334.0" y="162" text-anchor="middle" class="roll-note" fill="#5b6b79">resolutions, in order (2)</text>
+</svg></div>
+        <p class="rolling-caption">
+          The cumulative Brier score after each resolution. It should sit below the dashed
+          baseline; if it does not, the forecasts are worse than saying 50% to everything.
+          Early points move sharply because a mean over few results is mostly noise.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section class="hero">
+    <div class="wrap">
+      <h2>Calibration <span class="h2-note">&mdash; stated confidence against what actually happened</span></h2>
+      <div class="panel"><svg viewBox="0 0 960 580" class="calibration" role="img" aria-labelledby="cal-title cal-desc" preserveAspectRatio="xMidYMid meet">
+<title id="cal-title">Calibration curve</title>
+<desc id="cal-desc">Stated confidence on the horizontal axis against observed frequency on the vertical axis, for 2 resolved predictions. A perfectly calibrated forecaster sits on the diagonal. Vertical bars are Wilson 90 per cent intervals. The same numbers are given in the table below the chart.</desc>
+<rect width="960" height="580" fill="#16222f"/>
+<line x1="92.0" y1="44" x2="92.0" y2="488" stroke="#9a7b3f" stroke-width="1" opacity="0.45"/>
+<line x1="92" y1="488.0" x2="920" y2="488.0" stroke="#9a7b3f" stroke-width="1" opacity="0.45"/>
+<line x1="174.8" y1="44" x2="174.8" y2="488" stroke="#2b3b4c" stroke-width="1" opacity="0.55"/>
+<line x1="92" y1="443.6" x2="920" y2="443.6" stroke="#2b3b4c" stroke-width="1" opacity="0.55"/>
+<line x1="257.6" y1="44" x2="257.6" y2="488" stroke="#2b3b4c" stroke-width="1" opacity="0.55"/>
+<line x1="92" y1="399.2" x2="920" y2="399.2" stroke="#2b3b4c" stroke-width="1" opacity="0.55"/>
+<line x1="340.4" y1="44" x2="340.4" y2="488" stroke="#2b3b4c" stroke-width="1" opacity="0.55"/>
+<line x1="92" y1="354.8" x2="920" y2="354.8" stroke="#2b3b4c" stroke-width="1" opacity="0.55"/>
+<line x1="423.2" y1="44" x2="423.2" y2="488" stroke="#2b3b4c" stroke-width="1" opacity="0.55"/>
+<line x1="92" y1="310.4" x2="920" y2="310.4" stroke="#2b3b4c" stroke-width="1" opacity="0.55"/>
+<line x1="506.0" y1="44" x2="506.0" y2="488" stroke="#9a7b3f" stroke-width="1" opacity="0.45"/>
+<line x1="92" y1="266.0" x2="920" y2="266.0" stroke="#9a7b3f" stroke-width="1" opacity="0.45"/>
+<line x1="588.8" y1="44" x2="588.8" y2="488" stroke="#2b3b4c" stroke-width="1" opacity="0.55"/>
+<line x1="92" y1="221.6" x2="920" y2="221.6" stroke="#2b3b4c" stroke-width="1" opacity="0.55"/>
+<line x1="671.6" y1="44" x2="671.6" y2="488" stroke="#2b3b4c" stroke-width="1" opacity="0.55"/>
+<line x1="92" y1="177.2" x2="920" y2="177.2" stroke="#2b3b4c" stroke-width="1" opacity="0.55"/>
+<line x1="754.4" y1="44" x2="754.4" y2="488" stroke="#2b3b4c" stroke-width="1" opacity="0.55"/>
+<line x1="92" y1="132.8" x2="920" y2="132.8" stroke="#2b3b4c" stroke-width="1" opacity="0.55"/>
+<line x1="837.2" y1="44" x2="837.2" y2="488" stroke="#2b3b4c" stroke-width="1" opacity="0.55"/>
+<line x1="92" y1="88.4" x2="920" y2="88.4" stroke="#2b3b4c" stroke-width="1" opacity="0.55"/>
+<line x1="920.0" y1="44" x2="920.0" y2="488" stroke="#9a7b3f" stroke-width="1" opacity="0.45"/>
+<line x1="92" y1="44.0" x2="920" y2="44.0" stroke="#9a7b3f" stroke-width="1" opacity="0.45"/>
+<rect x="92" y="44" width="828" height="444" fill="none" stroke="#9a7b3f" stroke-width="1.5" opacity="0.7"/>
+<line x1="92.0" y1="488.0" x2="920.0" y2="44.0" stroke="#c9a45c" stroke-width="2" stroke-dasharray="7 6" opacity="0.9"/>
+<text transform="translate(332.4,340.8) rotate(-28.20)" text-anchor="middle" class="cal-note" fill="#c9a45c">perfect calibration</text>
+<text x="92.0" y="514.0" text-anchor="middle" class="cal-tick" fill="#8f9ca7">0</text>
+<text x="78" y="493.0" text-anchor="end" class="cal-tick" fill="#8f9ca7">0</text>
+<text x="257.6" y="514.0" text-anchor="middle" class="cal-tick" fill="#8f9ca7">20</text>
+<text x="78" y="404.2" text-anchor="end" class="cal-tick" fill="#8f9ca7">20</text>
+<text x="423.2" y="514.0" text-anchor="middle" class="cal-tick" fill="#8f9ca7">40</text>
+<text x="78" y="315.4" text-anchor="end" class="cal-tick" fill="#8f9ca7">40</text>
+<text x="588.8" y="514.0" text-anchor="middle" class="cal-tick" fill="#8f9ca7">60</text>
+<text x="78" y="226.6" text-anchor="end" class="cal-tick" fill="#8f9ca7">60</text>
+<text x="754.4" y="514.0" text-anchor="middle" class="cal-tick" fill="#8f9ca7">80</text>
+<text x="78" y="137.8" text-anchor="end" class="cal-tick" fill="#8f9ca7">80</text>
+<text x="920.0" y="514.0" text-anchor="middle" class="cal-tick" fill="#8f9ca7">100</text>
+<text x="78" y="49.0" text-anchor="end" class="cal-tick" fill="#8f9ca7">100</text>
+<text x="506.0" y="546.0" text-anchor="middle" class="cal-axis" fill="#f2efe9">stated confidence (%)</text>
+<text transform="translate(34,266.0) rotate(-90)" text-anchor="middle" class="cal-axis" fill="#f2efe9">observed frequency (%)</text>
+<line x1="630.2" y1="488.0" x2="630.2" y2="163.8" stroke="#c9a45c" stroke-width="2" stroke-dasharray="4 4" opacity="0.55"/>
+<line x1="623.2" y1="488.0" x2="637.2" y2="488.0" stroke="#c9a45c" stroke-width="2" opacity="0.55"/>
+<line x1="623.2" y1="163.8" x2="637.2" y2="163.8" stroke="#c9a45c" stroke-width="2" opacity="0.55"/>
+<line x1="713.0" y1="368.2" x2="713.0" y2="44.0" stroke="#c9a45c" stroke-width="2" stroke-dasharray="4 4" opacity="0.55"/>
+<line x1="706.0" y1="368.2" x2="720.0" y2="368.2" stroke="#c9a45c" stroke-width="2" opacity="0.55"/>
+<line x1="706.0" y1="44.0" x2="720.0" y2="44.0" stroke="#c9a45c" stroke-width="2" opacity="0.55"/>
+<circle cx="630.2" cy="488.0" r="8.6" fill="none" stroke="#f2efe9" stroke-width="2" stroke-dasharray="3 3" opacity="0.75"/>
+<text x="647.8" y="480.0" text-anchor="start" class="cal-count" fill="#8f9ca7">n=1 (thin)</text>
+<circle cx="713.0" cy="44.0" r="8.6" fill="none" stroke="#f2efe9" stroke-width="2" stroke-dasharray="3 3" opacity="0.75"/>
+<text x="730.6" y="60.0" text-anchor="start" class="cal-count" fill="#8f9ca7">n=1 (thin)</text>
+</svg></div>
+      <ul class='legend'><li><span class='swatch'><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6" fill="#16222f" stroke="#16222f" stroke-width="1.5"/></svg></span><span>bucket holding 5 or more resolved predictions, sized by count</span></li><li><span class='swatch'><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6" fill="none" stroke="#16222f" stroke-width="2" stroke-dasharray="3 3"/></svg></span><span>fewer than 5: shown, but too thin to read anything into</span></li><li><span class='swatch'><svg viewBox="0 0 16 16" aria-hidden="true"><line x1="8" y1="1" x2="8" y2="15" stroke="#9a7b3f" stroke-width="2"/><line x1="4" y1="1" x2="12" y2="1" stroke="#9a7b3f" stroke-width="2"/><line x1="4" y1="15" x2="12" y2="15" stroke="#9a7b3f" stroke-width="2"/></svg></span><span>Wilson 90% interval — tall bars mean the sample is too small to tell</span></li></ul>
+      <details class="numbers">
+        <summary>The numbers behind this chart</summary>
+        <div class="table-scroll"><table class='data-table'><caption>Calibration buckets. Ranges include the lower bound and exclude the upper, except the top bucket which includes 100%.</caption><thead><tr><th scope='col'>Stated</th><th scope='col'>Resolved</th><th scope='col'>Came true</th><th scope='col'>Mean stated</th><th scope='col'>Observed</th><th scope='col'>Note</th></tr></thead><tbody><tr class='is-empty'><th scope='row'>0-10%</th><td class='num'>0</td><td class='num'>—</td><td class='num'>—</td><td class='num'>—</td><td>no predictions in this range</td></tr><tr class='is-empty'><th scope='row'>10-20%</th><td class='num'>0</td><td class='num'>—</td><td class='num'>—</td><td class='num'>—</td><td>no predictions in this range</td></tr><tr class='is-empty'><th scope='row'>20-30%</th><td class='num'>0</td><td class='num'>—</td><td class='num'>—</td><td class='num'>—</td><td>no predictions in this range</td></tr><tr class='is-empty'><th scope='row'>30-40%</th><td class='num'>0</td><td class='num'>—</td><td class='num'>—</td><td class='num'>—</td><td>no predictions in this range</td></tr><tr class='is-empty'><th scope='row'>40-50%</th><td class='num'>0</td><td class='num'>—</td><td class='num'>—</td><td class='num'>—</td><td>no predictions in this range</td></tr><tr class='is-empty'><th scope='row'>50-60%</th><td class='num'>0</td><td class='num'>—</td><td class='num'>—</td><td class='num'>—</td><td>no predictions in this range</td></tr><tr><th scope='row'>60-70%</th><td class='num'>1</td><td class='num'>0</td><td class='num'>65.0%</td><td class='num'>0.0%</td><td>thin — 1 resolved, not meaningful</td></tr><tr><th scope='row'>70-80%</th><td class='num'>1</td><td class='num'>1</td><td class='num'>75.0%</td><td class='num'>100.0%</td><td>thin — 1 resolved, not meaningful</td></tr><tr class='is-empty'><th scope='row'>80-90%</th><td class='num'>0</td><td class='num'>—</td><td class='num'>—</td><td class='num'>—</td><td>no predictions in this range</td></tr><tr class='is-empty'><th scope='row'>90-100%</th><td class='num'>0</td><td class='num'>—</td><td class='num'>—</td><td class='num'>—</td><td>no predictions in this range</td></tr></tbody></table></div>
+      </details>
+    </div>
+  </section>
+
+  <section class="explainer">
+    <div class="wrap">
+<h2>What these numbers mean</h2>
+<p>
+  A forecast of &ldquo;70% chance&rdquo; is not right or wrong on its own. You cannot judge it from a
+  single outcome, only from many. So this page does not report a percentage of predictions that
+  came true &mdash; that measure ignores the confidence attached to each one, and it rewards a
+  forecaster who only ever predicts near-certainties.
+</p>
+<p>
+  The <strong>Brier score</strong> is the average squared distance between what was claimed and
+  what happened. Say 90% and it comes true, the penalty is (0.9&nbsp;&minus;&nbsp;1)&sup2;&nbsp;=&nbsp;0.01.
+  Say 90% and it does not, the penalty is (0.9&nbsp;&minus;&nbsp;0)&sup2;&nbsp;=&nbsp;0.81. Lower is
+  better; 0 is perfect. The number is meaningless in isolation, so it is shown against the
+  <strong>baseline</strong> of 0.2500 &mdash; the score you get by saying 50% to everything and
+  knowing nothing. Beating the baseline is the minimum bar, not an achievement.
+</p>
+<p>
+  <strong>Calibration</strong> asks a different question: when this forecaster says 70%, does the
+  thing happen about 70% of the time? Predictions are grouped by stated confidence and each group
+  is plotted against how often those claims actually came true. A perfectly calibrated forecaster
+  sits on the diagonal. Sitting above it means being too cautious; below it means being
+  overconfident, which is the common failure.
+</p>
+<p>
+  Calibration needs volume to mean anything. A bucket holding two predictions tells you nothing at
+  all, so the chart draws thin buckets hollow and prints the sample size next to every point. The
+  vertical bars are 90% confidence intervals: where they are tall, the honest reading is that we do
+  not yet know. They shrink only as the record grows.
+</p>
+</div>
+  </section>
+
+  <section id="log">
+    <div class="wrap">
+      <h2>The log <span class="h2-note">&mdash; newest first, 1 open and 2 resolved, nothing withheld</span></h2>
+      
+<article class="entry entry--open">
+  <div class="entry-id"><span class="num">P-0003</span><span class='tag'>example record</span></div>
+  <div class="entry-body">
+    <p class="entry-claim">EXAMPLE PLACEHOLDER INDICATOR C (fictional series, not a real statistic) prints at or above 1.5 per cent in the example annual release.</p>
+    <p class="entry-meta">
+      <span>Made <time datetime="2026-09-10" class="num">2026-09-10</time></span>
+      <span>Resolves <time datetime="2027-03-31" class="num">2027-03-31</time></span>
+      <span>Source: Fictional Placeholder Statistics Office, example annual publication, March 2027</span>
+    </p>
+    
+    <details class="entry-reasoning">
+      <summary>Reasoning as written at the time</summary>
+      <p>This is placeholder text seeded so the dashboard has an open prediction to display alongside the resolved ones. Open predictions are always shown, never hidden until they look good. The indicator named in the claim does not exist.</p>
+    </details>
+  </div>
+  <div class="entry-probability"><span class="num">40</span><span class="pct">%</span></div>
+  <div class="entry-outcome"><span class='mark mark--open'>open</span></div>
+</article>
+
+<article class="entry entry--resolved">
+  <div class="entry-id"><span class="num">P-0002</span><span class='tag'>example record</span></div>
+  <div class="entry-body">
+    <p class="entry-claim">EXAMPLE PLACEHOLDER INDICATOR B (fictional series, not a real statistic) prints below 4.5 per cent in the example quarterly release.</p>
+    <p class="entry-meta">
+      <span>Made <time datetime="2026-09-10" class="num">2026-09-10</time></span>
+      <span>Resolves <time datetime="2026-09-10" class="num">2026-09-10</time></span>
+      <span>Source: Fictional Placeholder Statistics Office, example quarterly report, Q3 2026</span>
+    </p>
+    <p class='entry-resolution'>Resolved 2026-09-10: the claim <strong>did not come true</strong>. Placeholder resolution. The fictional example release was recorded as breaching the threshold, so this prediction is a miss. No real data was consulted.</p>
+    <details class="entry-reasoning">
+      <summary>Reasoning as written at the time</summary>
+      <p>This is placeholder text seeded so the dashboard has a resolved miss to display. A miss is included deliberately, because a tracker that only ever showed hits would not be worth reading. The indicator named in the claim does not exist.</p>
+    </details>
+  </div>
+  <div class="entry-probability"><span class="num">65</span><span class="pct">%</span></div>
+  <div class="entry-outcome"><span class='mark mark--false'><span aria-hidden='true'>&#9675;</span> refuted</span></div>
+</article>
+
+<article class="entry entry--resolved">
+  <div class="entry-id"><span class="num">P-0001</span><span class='tag'>example record</span></div>
+  <div class="entry-body">
+    <p class="entry-claim">EXAMPLE PLACEHOLDER INDICATOR A (fictional series, not a real statistic) prints at or above 2.0 per cent year on year in the example release.</p>
+    <p class="entry-meta">
+      <span>Made <time datetime="2026-09-10" class="num">2026-09-10</time></span>
+      <span>Resolves <time datetime="2026-09-10" class="num">2026-09-10</time></span>
+      <span>Source: Fictional Placeholder Statistics Office, example flash estimate, September 2026</span>
+    </p>
+    <p class='entry-resolution'>Resolved 2026-09-10: the claim <strong>came true</strong>. Placeholder resolution. The fictional example release was recorded as satisfying the threshold. No real data was consulted.</p>
+    <details class="entry-reasoning">
+      <summary>Reasoning as written at the time</summary>
+      <p>This is placeholder text seeded so the dashboard has something to render. It does not describe any real economic view, and the indicator named in the claim does not exist. Replace this record before using the tracker for anything real.</p>
+    </details>
+  </div>
+  <div class="entry-probability"><span class="num">75</span><span class="pct">%</span></div>
+  <div class="entry-outcome"><span class='mark mark--true'><span aria-hidden='true'>&#9679;</span> affirmed</span></div>
+</article>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <p>
+      Each prediction is a JSON file committed to a public git repository. The fields that
+      constitute the forecast &mdash; the claim, the probability, the reasoning, the dates &mdash;
+      are never rewritten; only the outcome and its note are added later. A verification script
+      re-reads every historical revision of every record on each build and reports above.
+    </p>
+    <p>3 records, last changed 2026-09-10.</p>
+  </div>
+</footer>
+</body>
+</html>

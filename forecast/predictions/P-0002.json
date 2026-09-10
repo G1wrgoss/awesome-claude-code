@@ -1,0 +1,13 @@
+{
+  "id": "P-0002",
+  "created_at": "2026-09-10",
+  "resolves_on": "2026-09-10",
+  "claim": "EXAMPLE PLACEHOLDER INDICATOR B (fictional series, not a real statistic) prints below 4.5 per cent in the example quarterly release.",
+  "probability": 65,
+  "reasoning": "This is placeholder text seeded so the dashboard has a resolved miss to display. A miss is included deliberately, because a tracker that only ever showed hits would not be worth reading. The indicator named in the claim does not exist.",
+  "resolution_source": "Fictional Placeholder Statistics Office, example quarterly report, Q3 2026",
+  "outcome": false,
+  "resolved_at": "2026-09-10",
+  "resolution_note": "Placeholder resolution. The fictional example release was recorded as breaching the threshold, so this prediction is a miss. No real data was consulted.",
+  "example": true
+}

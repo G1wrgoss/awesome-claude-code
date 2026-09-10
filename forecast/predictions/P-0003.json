@@ -1,0 +1,13 @@
+{
+  "id": "P-0003",
+  "created_at": "2026-09-10",
+  "resolves_on": "2027-03-31",
+  "claim": "EXAMPLE PLACEHOLDER INDICATOR C (fictional series, not a real statistic) prints at or above 1.5 per cent in the example annual release.",
+  "probability": 40,
+  "reasoning": "This is placeholder text seeded so the dashboard has an open prediction to display alongside the resolved ones. Open predictions are always shown, never hidden until they look good. The indicator named in the claim does not exist.",
+  "resolution_source": "Fictional Placeholder Statistics Office, example annual publication, March 2027",
+  "outcome": null,
+  "resolved_at": null,
+  "resolution_note": null,
+  "example": true
+}

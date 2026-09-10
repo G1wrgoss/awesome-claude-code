@@ -1,0 +1,105 @@
+#!/usr/bin/env python3
+"""Resolve a prediction whose outcome is now known, and commit the result.
+
+Only outcome, resolved_at and resolution_note are written. Everything else is left exactly as
+it was; the verification script will catch it if that ever stops being true.
+"""
+
+from __future__ import annotations
+
+import argparse
+import datetime as _dt
+import sys
+
+from _common import PREDICTIONS_DIR, ask, die, git, rebuild_and_commit_site, repo_root
+
+from tracker.model import Prediction, load_all, to_json
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("prediction_id", nargs="?", help="e.g. P-0003")
+    parser.add_argument("--outcome", choices=["true", "false"])
+    parser.add_argument("--note")
+    parser.add_argument("--all", action="store_true", help="list every open prediction, not only those due")
+    parser.add_argument("--no-commit", action="store_true")
+    args = parser.parse_args()
+
+    root = repo_root()
+    today = _dt.date.today()
+    predictions = load_all(PREDICTIONS_DIR)
+    open_ones = [p for p in predictions if not p.resolved]
+    due = [p for p in open_ones if p.is_due(today)]
+    candidates = open_ones if args.all else due
+
+    if not candidates:
+        if open_ones:
+            print(f"\nNothing due yet. {len(open_ones)} open prediction(s), earliest resolving "
+                  f"{min(p.resolves_on for p in open_ones).isoformat()}.")
+            print("Use --all to resolve one early anyway.")
+        else:
+            print("\nNo open predictions.")
+        return 0
+
+    print(f"\n{len(candidates)} prediction(s) {'open' if args.all else 'past their resolution date'}:\n")
+    for prediction in sorted(candidates, key=lambda p: p.resolves_on):
+        overdue = (today - prediction.resolves_on).days
+        marker = f"  ({overdue} day{'' if overdue == 1 else 's'} past due)" if overdue > 0 else ""
+        print(f"  {prediction.id}  {prediction.probability:>3}%  resolves {prediction.resolves_on.isoformat()}{marker}")
+        print(f"          {prediction.claim}")
+        print(f"          settles against: {prediction.resolution_source}\n")
+
+    identifier = args.prediction_id or ask("Which prediction (id):")
+    identifier = identifier.strip().upper()
+    match = next((p for p in candidates if p.id == identifier), None)
+    if match is None:
+        if any(p.id == identifier for p in predictions):
+            die(f"{identifier} is not open for resolution (already resolved, or not yet due -- try --all)")
+        die(f"no prediction with id {identifier}")
+
+    if args.outcome:
+        outcome = args.outcome == "true"
+    else:
+        print(f"\n  {match.claim}")
+        while True:
+            answer = ask("Did the claim come true? (true/false):").lower()
+            if answer in ("true", "t", "yes", "y"):
+                outcome = True
+                break
+            if answer in ("false", "f", "no", "n"):
+                outcome = False
+                break
+            print("  (answer true or false)")
+
+    note = args.note or ask(
+        "Resolution note -- what the release actually said, and where you read it:", multiline=True
+    )
+    if len(note.strip()) < 10:
+        die("resolution note is too short; record what actually happened so a reader can check it")
+
+    resolved = Prediction(
+        id=match.id, created_at=match.created_at, resolves_on=match.resolves_on, claim=match.claim,
+        probability=match.probability, reasoning=match.reasoning,
+        resolution_source=match.resolution_source, outcome=outcome, resolved_at=today,
+        resolution_note=note.strip(), example=match.example, path=match.path,
+    )
+    match.path.write_text(to_json(resolved), encoding="utf-8")
+
+    verdict = "AFFIRMED" if outcome else "REFUTED"
+    penalty = (resolved.p - (1.0 if outcome else 0.0)) ** 2
+    print(f"\n{match.id} {verdict}. Stated {match.probability}%, Brier penalty on this one: {penalty:.4f}")
+    print(f"wrote {match.path.relative_to(root)}")
+
+    if args.no_commit:
+        print("left uncommitted (--no-commit).")
+        return 0
+
+    git("add", "--", str(match.path.relative_to(root)))
+    git("commit", "-m", f"resolve {match.id}: {verdict.lower()}")
+    print(f"committed: {git('rev-parse', '--short', 'HEAD').strip()}")
+    rebuild_and_commit_site(root)
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

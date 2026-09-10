@@ -1,0 +1,125 @@
+#!/usr/bin/env python3
+"""Record a new prediction and commit it.
+
+Refuses vague claims. The point of the gate is that a claim you cannot argue about later is the
+only kind worth scoring -- and the moment to enforce that is now, not after the outcome is known.
+"""
+
+from __future__ import annotations
+
+import argparse
+import datetime as _dt
+import sys
+
+from _common import PREDICTIONS_DIR, ask, die, git, rebuild_and_commit_site, report_problems, repo_root
+
+from tracker.claimcheck import check_claim, check_reasoning, check_resolution_source
+from tracker.model import Prediction, load_all, next_id, to_json
+
+
+def prompt_until_valid(label: str, checker, *, multiline: bool = False, given: str | None = None) -> str:
+    value = given
+    while True:
+        if value is None:
+            value = ask(label, multiline=multiline)
+        problems = checker(value)
+        if not problems:
+            return value
+        report_problems(label.rstrip(":"), problems)
+        if given is not None:
+            die("value supplied on the command line did not pass validation; nothing was written")
+        print()
+        value = None
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--claim")
+    parser.add_argument("--probability", type=int)
+    parser.add_argument("--resolves-on")
+    parser.add_argument("--reasoning")
+    parser.add_argument("--resolution-source")
+    parser.add_argument("--example", action="store_true", help="mark as placeholder, not a real forecast")
+    parser.add_argument("--no-commit", action="store_true", help="write the file but leave it uncommitted")
+    args = parser.parse_args()
+
+    root = repo_root()
+    PREDICTIONS_DIR.mkdir(parents=True, exist_ok=True)
+    existing = load_all(PREDICTIONS_DIR)
+    identifier = next_id(existing)
+    today = _dt.date.today()
+
+    print(f"\nNew prediction {identifier}, dated {today.isoformat()}.")
+    print("This date is locked once committed and checked against git history on every build.\n")
+
+    claim = prompt_until_valid(
+        "Claim (name the indicator, the exact threshold, and the release it resolves against):",
+        check_claim, multiline=True, given=args.claim,
+    )
+
+    if args.probability is not None:
+        probability = args.probability
+        if not 0 <= probability <= 100:
+            die(f"probability must be an integer 0-100, got {probability}")
+    else:
+        while True:
+            raw = ask("Probability the claim is true (integer 0-100):")
+            try:
+                probability = int(raw)
+            except ValueError:
+                print("  (must be a whole number)")
+                continue
+            if 0 <= probability <= 100:
+                break
+            print("  (must be within 0-100)")
+
+    if probability in (0, 100):
+        print("\n  note: a stated 0% or 100% claims certainty. One surprise is unrecoverable")
+        print("        for your Brier score. Recorded as given.\n")
+
+    if args.resolves_on:
+        resolves_raw = args.resolves_on
+    else:
+        resolves_raw = ask("Date the outcome becomes known (YYYY-MM-DD):")
+    try:
+        resolves_on = _dt.date.fromisoformat(resolves_raw)
+    except ValueError:
+        die(f"'{resolves_raw}' is not an ISO date (YYYY-MM-DD)")
+    if resolves_on < today:
+        die(f"resolves_on ({resolves_on}) is in the past; a prediction must be locked before its outcome")
+
+    resolution_source = prompt_until_valid(
+        "Resolution source (the exact dated release that settles this):",
+        check_resolution_source, given=args.resolution_source,
+    )
+    reasoning = prompt_until_valid(
+        "Reasoning, 2-5 sentences, in your own words:",
+        check_reasoning, multiline=True, given=args.reasoning,
+    )
+
+    prediction = Prediction(
+        id=identifier, created_at=today, resolves_on=resolves_on, claim=claim,
+        probability=probability, reasoning=reasoning, resolution_source=resolution_source,
+        outcome=None, resolved_at=None, resolution_note=None, example=args.example,
+        path=PREDICTIONS_DIR / f"{identifier}.json",
+    )
+
+    path = PREDICTIONS_DIR / f"{identifier}.json"
+    if path.exists():
+        die(f"{path} already exists; refusing to overwrite an existing record")
+    path.write_text(to_json(prediction), encoding="utf-8")
+    print(f"\nwrote {path.relative_to(root)}")
+
+    if args.no_commit:
+        print("left uncommitted (--no-commit). It will show as unverified until committed.")
+        return 0
+
+    git("add", "--", str(path.relative_to(root)))
+    git("commit", "-m", f"predict {identifier}: {claim[:64]}{'...' if len(claim) > 64 else ''}")
+    print(f"committed. {identifier} is now locked: {git('rev-parse', '--short', 'HEAD').strip()}")
+    rebuild_and_commit_site(root)
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
