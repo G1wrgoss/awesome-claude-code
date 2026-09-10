@@ -87,6 +87,7 @@ a:hover { color: var(--ochre); }
 }
 .integrity--ok { color: var(--affirmed); }
 .integrity--bad, .integrity--unknown { color: var(--refuted); }
+.integrity--none { color: var(--ink-soft); }
 .integrity-list { margin: 10px 0 0; padding-left: 20px; color: var(--refuted); font-size: 0.9rem; }
 .caveat {
   margin: 10px 0 0; max-width: var(--measure);
@@ -285,8 +286,8 @@ footer p { margin: 0 0 8px; max-width: var(--measure); }
       Dated probabilistic predictions about economic indicators, written down before the outcome
       is known, locked by commit, and scored afterwards whether they went well or badly.
     </p>
-    <p class='integrity integrity--ok'><span class='integrity-mark'>&#10003;</span>All 3 records match their first commit date, and no locked field has changed since the commit that created it.</p><p class='caveat'>Git author dates are written by the committer and can be backdated on a local machine. These checks prove each record is consistent with its own commit history; independent proof of timing is the host&#x27;s public push log, which the repository owner cannot rewrite.</p>
-    <div class='notice'><strong>Every record here is an example.</strong> They contain placeholder text, not real forecasts. The indicators and sources they name are fictional and no economic data was consulted to write or resolve them. There is no track record to score yet: every figure above is empty because no real prediction has been made. They exist so the dashboard has something to render before a real record begins.</div>
+    <p class='integrity integrity--none'><span class='integrity-mark'>&ndash;</span>No predictions have been recorded yet, so there is nothing to verify.</p><p class='caveat'>Git author dates are written by the committer and can be backdated on a local machine. These checks prove each record is consistent with its own commit history; independent proof of timing is the host&#x27;s public push log, which the repository owner cannot rewrite.</p>
+    
   </div>
 </header>
 
@@ -294,7 +295,7 @@ footer p { margin: 0 0 8px; max-width: var(--measure); }
   <section class="standing-section">
     <div class="wrap">
       <h2>Standing <span class="h2-note">&mdash; every real prediction, resolved and open</span></h2>
-      <dl class='standing'><div class='figure'><dt>Brier score</dt><dd class='figure-value num'>—</dd><dd class='figure-note'>lower is better</dd></div><div class='figure'><dt>Baseline</dt><dd class='figure-value num'>0.2500</dd><dd class='figure-note'>always saying 50%</dd></div><div class='figure'><dt>Skill vs baseline</dt><dd class='figure-value num'>—</dd><dd class='figure-note'>share of baseline error removed</dd></div><div class='figure'><dt>Resolved</dt><dd class='figure-value num'>0</dd><dd class='figure-note'>0 affirmed, 0 refuted</dd></div><div class='figure'><dt>Open</dt><dd class='figure-value num'>0</dd><dd class='figure-note'>not yet settled</dd></div></dl><p class='standing-note'>Excludes 3 example records, which carry invented outcomes and are counted in none of these figures.</p>
+      <dl class='standing'><div class='figure'><dt>Brier score</dt><dd class='figure-value num'>—</dd><dd class='figure-note'>lower is better</dd></div><div class='figure'><dt>Baseline</dt><dd class='figure-value num'>0.2500</dd><dd class='figure-note'>always saying 50%</dd></div><div class='figure'><dt>Skill vs baseline</dt><dd class='figure-value num'>—</dd><dd class='figure-note'>share of baseline error removed</dd></div><div class='figure'><dt>Resolved</dt><dd class='figure-value num'>0</dd><dd class='figure-note'>0 affirmed, 0 refuted</dd></div><div class='figure'><dt>Open</dt><dd class='figure-value num'>0</dd><dd class='figure-note'>not yet settled</dd></div></dl>
       <div class="rolling-row">
         <div><svg viewBox="0 0 640 170" class="rolling" role="img" aria-label="Rolling Brier score: no resolved predictions yet."><text x="320.0" y="85.0" text-anchor="middle" class="roll-note" fill="#5b6b79">Nothing resolved yet</text></svg></div>
         <p class="rolling-caption">
@@ -398,64 +399,8 @@ footer p { margin: 0 0 8px; max-width: var(--measure); }
 
   <section id="log">
     <div class="wrap">
-      <h2>The log <span class="h2-note">&mdash; newest first, 1 open and 2 resolved, nothing withheld, including 3 example records that count toward none of the figures above</span></h2>
-      
-<article class="entry entry--open">
-  <div class="entry-id"><span class="num">P-0003</span><span class='tag'>example record</span></div>
-  <div class="entry-body">
-    <p class="entry-claim">EXAMPLE PLACEHOLDER INDICATOR C (fictional series, not a real statistic) prints at or above 1.5 per cent in the example annual release.</p>
-    <p class="entry-meta">
-      <span>Made <time datetime="2026-09-10" class="num">2026-09-10</time></span>
-      <span>Resolves <time datetime="2027-03-31" class="num">2027-03-31</time></span>
-      <span>Source: Fictional Placeholder Statistics Office, example annual publication, March 2027</span>
-    </p>
-    
-    <details class="entry-reasoning">
-      <summary>Reasoning as written at the time</summary>
-      <p>This is placeholder text seeded so the dashboard has an open prediction to display alongside the resolved ones. Open predictions are always shown, never hidden until they look good. The indicator named in the claim does not exist.</p>
-    </details>
-  </div>
-  <div class="entry-probability"><span class="num">40</span><span class="pct">%</span></div>
-  <div class="entry-outcome"><span class='mark mark--open'>open</span></div>
-</article>
-
-<article class="entry entry--resolved">
-  <div class="entry-id"><span class="num">P-0002</span><span class='tag'>example record</span></div>
-  <div class="entry-body">
-    <p class="entry-claim">EXAMPLE PLACEHOLDER INDICATOR B (fictional series, not a real statistic) prints below 4.5 per cent in the example quarterly release.</p>
-    <p class="entry-meta">
-      <span>Made <time datetime="2026-09-10" class="num">2026-09-10</time></span>
-      <span>Resolves <time datetime="2026-09-10" class="num">2026-09-10</time></span>
-      <span>Source: Fictional Placeholder Statistics Office, example quarterly report, Q3 2026</span>
-    </p>
-    <p class='entry-resolution'>Resolved 2026-09-10: the claim <strong>did not come true</strong>. Placeholder resolution. The fictional example release was recorded as breaching the threshold, so this prediction is a miss. No real data was consulted.</p>
-    <details class="entry-reasoning">
-      <summary>Reasoning as written at the time</summary>
-      <p>This is placeholder text seeded so the dashboard has a resolved miss to display. A miss is included deliberately, because a tracker that only ever showed hits would not be worth reading. The indicator named in the claim does not exist.</p>
-    </details>
-  </div>
-  <div class="entry-probability"><span class="num">65</span><span class="pct">%</span></div>
-  <div class="entry-outcome"><span class='mark mark--false'><span aria-hidden='true'>&#9675;</span> refuted</span></div>
-</article>
-
-<article class="entry entry--resolved">
-  <div class="entry-id"><span class="num">P-0001</span><span class='tag'>example record</span></div>
-  <div class="entry-body">
-    <p class="entry-claim">EXAMPLE PLACEHOLDER INDICATOR A (fictional series, not a real statistic) prints at or above 2.0 per cent year on year in the example release.</p>
-    <p class="entry-meta">
-      <span>Made <time datetime="2026-09-10" class="num">2026-09-10</time></span>
-      <span>Resolves <time datetime="2026-09-10" class="num">2026-09-10</time></span>
-      <span>Source: Fictional Placeholder Statistics Office, example flash estimate, September 2026</span>
-    </p>
-    <p class='entry-resolution'>Resolved 2026-09-10: the claim <strong>came true</strong>. Placeholder resolution. The fictional example release was recorded as satisfying the threshold. No real data was consulted.</p>
-    <details class="entry-reasoning">
-      <summary>Reasoning as written at the time</summary>
-      <p>This is placeholder text seeded so the dashboard has something to render. It does not describe any real economic view, and the indicator named in the claim does not exist. Replace this record before using the tracker for anything real.</p>
-    </details>
-  </div>
-  <div class="entry-probability"><span class="num">75</span><span class="pct">%</span></div>
-  <div class="entry-outcome"><span class='mark mark--true'><span aria-hidden='true'>&#9679;</span> affirmed</span></div>
-</article>
+      <h2>The log <span class="h2-note">&mdash; newest first, 0 open and 0 resolved, nothing withheld</span></h2>
+      <p class='entry-meta'>No predictions have been recorded yet.</p>
     </div>
   </section>
 </main>
@@ -468,7 +413,7 @@ footer p { margin: 0 0 8px; max-width: var(--measure); }
       are never rewritten; only the outcome and its note are added later. A verification script
       re-reads every historical revision of every record on each build and reports above.
     </p>
-    <p>3 records listed, last changed 2026-09-10.</p>
+    <p>0 records listed, last changed 2026-09-10.</p>
   </div>
 </footer>
 </body>

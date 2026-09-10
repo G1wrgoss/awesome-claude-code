@@ -1,0 +1,6 @@
+# Keeps predictions/ present in git even when it holds no records.
+#
+# Without this, deleting the last prediction file removes the directory entirely and both
+# build-site and verify fail. An empty record set is a legitimate state -- a tracker with
+# nothing in it yet -- whereas a missing directory usually means the command was run from the
+# wrong place, so load_all still treats that as an error worth raising.

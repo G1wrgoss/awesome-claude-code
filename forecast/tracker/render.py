@@ -366,7 +366,13 @@ def _integrity_block(report: Report | None, error: str | None) -> str:
             f"Verification could not be run: {e(error)}. Treat the record as unverified.</p>"
         )
     assert report is not None
-    if report.ok:
+    if not report.verdicts:
+        # A pass mark for a check with nothing to check would be an overclaim, however small.
+        body = (
+            "<p class='integrity integrity--none'><span class='integrity-mark'>&ndash;</span>"
+            "No predictions have been recorded yet, so there is nothing to verify.</p>"
+        )
+    elif report.ok:
         body = (
             f"<p class='integrity integrity--ok'><span class='integrity-mark'>&#10003;</span>"
             f"{e(report.summary)}</p>"
@@ -560,6 +566,7 @@ a:hover {{ color: var(--ochre); }}
 }}
 .integrity--ok {{ color: var(--affirmed); }}
 .integrity--bad, .integrity--unknown {{ color: var(--refuted); }}
+.integrity--none {{ color: var(--ink-soft); }}
 .integrity-list {{ margin: 10px 0 0; padding-left: 20px; color: var(--refuted); font-size: 0.9rem; }}
 .caveat {{
   margin: 10px 0 0; max-width: var(--measure);

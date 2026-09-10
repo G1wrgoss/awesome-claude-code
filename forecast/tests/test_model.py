@@ -169,3 +169,25 @@ def test_is_due():
     assert prediction.is_due(_dt.date(2026, 3, 31)) is False
     resolved = _parse(resolves_on="2026-04-01", outcome=True, resolved_at="2026-04-02", resolution_note="Placeholder note.")
     assert resolved.is_due(_dt.date(2026, 5, 1)) is False
+
+
+def test_an_empty_prediction_directory_loads_as_an_empty_record_set(tmp_path):
+    """Deleting the last record must not break the build.
+
+    Git does not track empty directories, so removing the final prediction file also removes
+    predictions/ unless something keeps it present. A tracker with nothing in it yet is a
+    legitimate state; a *missing* directory usually means the command ran from the wrong
+    place, which is why that still raises.
+    """
+    empty = tmp_path / "predictions"
+    empty.mkdir()
+    assert load_all(empty) == []
+
+
+def test_non_json_files_in_the_directory_are_ignored(tmp_path):
+    """.gitkeep and similar must not be parsed as records."""
+    directory = tmp_path / "predictions"
+    directory.mkdir()
+    (directory / ".gitkeep").write_text("# placeholder\n", encoding="utf-8")
+    (directory / "README.md").write_text("notes\n", encoding="utf-8")
+    assert load_all(directory) == []

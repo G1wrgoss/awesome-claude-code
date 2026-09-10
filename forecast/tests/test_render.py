@@ -12,14 +12,28 @@ import re
 
 import pytest
 from helpers import make
-from tracker.integrity import Report
+from tracker.integrity import FileVerdict, Report
 from tracker.render import build_page, calibration_svg, calibration_table, fmt_score, rolling_svg
 from tracker.scoring import calibration, rolling_brier
 
-CLEAN_REPORT = Report(verdicts=[], checked_at="2026-09-10T00:00:00+00:00")
+
+def clean_report(predictions) -> Report:
+    """A passing report matching the given records, as verify_all always produces."""
+    return Report(
+        verdicts=[
+            FileVerdict(prediction_id=p.id, path=str(p.path), tracked=True, revisions=1)
+            for p in predictions
+        ],
+        checked_at="2026-09-10T00:00:00+00:00",
+    )
 
 
-def page(predictions, report=CLEAN_REPORT, error=None) -> str:
+_SENTINEL = object()
+
+
+def page(predictions, report=_SENTINEL, error=None) -> str:
+    if report is _SENTINEL:
+        report = clean_report(predictions)
     return build_page(predictions, report, error, record_updated=_dt.datetime(2026, 9, 10, tzinfo=_dt.timezone.utc))
 
 
@@ -103,8 +117,6 @@ def test_example_records_are_flagged_on_the_page():
 
 
 def test_integrity_failure_is_surfaced_not_swallowed():
-    from tracker.integrity import FileVerdict
-
     bad = FileVerdict(
         prediction_id="P-0001", path="predictions/P-0001.json", tracked=True,
         problems=["locked field 'probability' was changed after creation"],
@@ -188,9 +200,10 @@ def test_the_page_is_reproducible_for_unchanged_records():
     diff that hides what actually changed.
     """
     predictions = [make(80, True), make(45)]
+    report = clean_report(predictions)
     stamp = _dt.datetime(2026, 9, 10, tzinfo=_dt.timezone.utc)
-    first = build_page(predictions, CLEAN_REPORT, None, record_updated=stamp)
-    second = build_page(predictions, CLEAN_REPORT, None, record_updated=stamp)
+    first = build_page(predictions, report, None, record_updated=stamp)
+    second = build_page(predictions, report, None, record_updated=stamp)
     assert first == second
     assert "last changed 2026-09-10" in first
 
@@ -225,3 +238,21 @@ def test_footer_counts_what_the_page_lists_not_what_it_scores():
     html = page([make(80, True), make(50, True, example=True)])
     assert "2 records listed" in html
     assert "0 records" not in html
+
+
+def test_a_page_with_no_records_at_all_renders_and_says_so():
+    """The state a fresh tracker starts in, and the one it returns to if every record is deleted."""
+    html = page([])
+    assert "No predictions have been recorded yet." in html
+    assert "No resolved predictions yet" in html
+    assert "0.0000" not in html
+    assert "0 records listed" in html
+    assert html.startswith("<!doctype html>")
+
+
+def test_an_empty_record_set_is_not_shown_as_a_passed_verification():
+    """Nothing to check is not the same as everything checked out."""
+    html = page([], report=Report(verdicts=[]))
+    assert "integrity--none" in html
+    assert "nothing to verify" in html
+    assert "integrity integrity--ok" not in html
