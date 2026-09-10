@@ -276,3 +276,16 @@ def test_an_empty_record_set_is_not_shown_as_a_passed_verification():
     assert "integrity--none" in html
     assert "nothing to verify" in html
     assert "integrity integrity--ok" not in html
+
+
+def test_the_empty_chart_is_shorter_than_the_populated_one():
+    """A full-height blank grid would dominate a tracker that has nothing to show yet."""
+    import re as _re
+
+    def view_height(svg):
+        return float(_re.search(r'viewBox="0 0 \d+ ([\d.]+)"', svg).group(1))
+
+    empty = calibration_svg(calibration([]))
+    full = calibration_svg(calibration([make(75, True) for _ in range(6)]))
+    assert view_height(empty) < view_height(full)
+    assert "No resolved predictions yet" in empty

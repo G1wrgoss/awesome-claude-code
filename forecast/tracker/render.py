@@ -64,7 +64,13 @@ def calibration_svg(buckets: list[CalibrationBucket]) -> str:
     are enormous and the chart looks uncertain -- that is the honest reading and it is left
     alone rather than smoothed into something reassuring.
     """
-    width, height = 960, 800
+    populated = [b for b in buckets if not b.empty]
+
+    # Near-square once there is data, so the reference diagonal sits close to 45 degrees and the
+    # buckets spread vertically. Shorter when empty: a full-height blank grid would dominate the
+    # page of a tracker that has nothing to show yet.
+    width = 960
+    height = 800 if populated else 460
     left, right, top, bottom = 92, 40, 44, 92
     plot_w = width - left - right
     plot_h = height - top - bottom
@@ -80,7 +86,6 @@ def calibration_svg(buckets: list[CalibrationBucket]) -> str:
     def py(value: float) -> float:   # value 0-1 -> y (inverted)
         return top + pad + (1 - value) * (plot_h - 2 * pad)
 
-    populated = [b for b in buckets if not b.empty]
     total = sum(b.count for b in buckets)
 
     parts: list[str] = [
@@ -129,7 +134,7 @@ def calibration_svg(buckets: list[CalibrationBucket]) -> str:
     # Set along the line rather than across it -- the plot is wider than it is tall, so the
     # diagonal is shallower than 45 degrees on screen and any horizontal label near it is crossed.
     diagonal_angle = math.degrees(math.atan2(-plot_h, plot_w))
-    anchor_x, anchor_y = px(0.30), py(0.30)
+    anchor_x, anchor_y = px(0.62), py(0.62)
     parts.append(
         f'<text transform="translate({anchor_x - 8:.1f},{anchor_y - 14:.1f}) '
         f'rotate({diagonal_angle:.2f})" text-anchor="middle" class="cal-note" '
@@ -158,12 +163,16 @@ def calibration_svg(buckets: list[CalibrationBucket]) -> str:
     )
 
     if not populated:
+        # The diagonal runs corner to corner, so the message sits in the upper-left region it
+        # leaves empty. A backing panel behind centred text punches a visible hole through the
+        # line and the gridlines, which looks worse than the overlap it fixes.
+        centre_x, centre_y = px(0.32), py(0.82)
         parts.append(
-            f'<text x="{left + plot_w / 2:.1f}" y="{top + plot_h / 2 - 8:.1f}" '
+            f'<text x="{centre_x:.1f}" y="{centre_y - 8:.1f}" '
             f'text-anchor="middle" class="cal-empty" fill="{PAPER}">No resolved predictions yet</text>'
         )
         parts.append(
-            f'<text x="{left + plot_w / 2:.1f}" y="{top + plot_h / 2 + 22:.1f}" '
+            f'<text x="{centre_x:.1f}" y="{centre_y + 18:.1f}" '
             f'text-anchor="middle" class="cal-note" fill="{PANEL_FAINT}">'
             f'The curve appears once predictions begin to resolve.</text>'
         )
