@@ -1,0 +1,50 @@
+#!/usr/bin/env python3
+"""Generate the static dashboard into docs/ for GitHub Pages."""
+
+from __future__ import annotations
+
+import argparse
+import sys
+from pathlib import Path
+
+from _common import PREDICTIONS_DIR, repo_root
+
+from tracker.integrity import GitUnavailable, verify_all
+from tracker.model import load_all
+from tracker.render import write_site
+from tracker.scoring import standing
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--output", default=None, help="output directory (default: <repo>/docs)")
+    parser.add_argument("--strict", action="store_true", help="exit 1 if verification fails")
+    args = parser.parse_args()
+
+    root = repo_root()
+    output = Path(args.output) if args.output else root / "docs"
+    predictions = load_all(PREDICTIONS_DIR)
+
+    report = None
+    integrity_error = None
+    try:
+        report = verify_all(root, predictions)
+    except GitUnavailable as exc:
+        integrity_error = str(exc)
+        print(f"warning: {exc}", file=sys.stderr)
+
+    index = write_site(predictions, report, output, integrity_error)
+    result = standing(predictions)
+    print(f"wrote {index}")
+    print(f"  {result.total} record(s): {result.resolved} resolved, {result.open} open")
+    print(f"  Brier {result.brier if result.brier is not None else 'n/a'} against baseline {result.baseline}")
+    if report is not None:
+        print(f"  integrity: {report.summary}")
+
+    if args.strict and (report is None or not report.ok):
+        return 1
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
