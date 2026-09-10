@@ -41,12 +41,36 @@ SOURCE_KIND = re.compile(
 
 NUMBER = re.compile(r"\d")
 
+# Template text that a forecaster meant to overwrite and did not. These pass every other check
+# -- a filled-in example carries a real number and a real direction -- so without an explicit
+# refusal a pasted template commits cleanly into the permanent record.
+PLACEHOLDER_MARKERS = (
+    "replace", "todo", "fixme", "xxx", "lorem ipsum", "placeholder",
+    "e.g.", "your indicator", "your claim", "your reasoning",
+)
 
-def check_claim(claim: str) -> list[str]:
+
+def _placeholder_problems(text: str, field: str) -> list[str]:
+    lowered = text.lower()
+    found = sorted({m for m in PLACEHOLDER_MARKERS if m in lowered})
+    if not found:
+        return []
+    return [
+        (
+            f"looks like unfilled template text: contains {', '.join(repr(f) for f in found)}. "
+            f"Write your own {field}. (If this really is a placeholder record, pass --example.)"
+        )
+    ]
+
+
+def check_claim(claim: str, *, example: bool = False) -> list[str]:
     """Return a list of problems with the claim. Empty list means it passes."""
     problems: list[str] = []
     text = claim.strip()
     lowered = text.lower()
+
+    if not example:
+        problems.extend(_placeholder_problems(text, "claim"))
 
     if len(text) < 40:
         problems.append(
@@ -75,10 +99,13 @@ def check_claim(claim: str) -> list[str]:
     return problems
 
 
-def check_resolution_source(source: str) -> list[str]:
+def check_resolution_source(source: str, *, example: bool = False) -> list[str]:
     """Return a list of problems with the resolution source. Empty list means it passes."""
     problems: list[str] = []
     text = source.strip()
+
+    if not example:
+        problems.extend(_placeholder_problems(text, "resolution source"))
 
     if len(text) < 10:
         problems.append(
@@ -98,10 +125,13 @@ def check_resolution_source(source: str) -> list[str]:
     return problems
 
 
-def check_reasoning(reasoning: str) -> list[str]:
+def check_reasoning(reasoning: str, *, example: bool = False) -> list[str]:
     """Reasoning must be 2-5 sentences of the forecaster's own rationale."""
     problems: list[str] = []
     text = reasoning.strip()
+
+    if not example:
+        problems.extend(_placeholder_problems(text, "reasoning"))
     if len(text) < 40:
         problems.append(f"too short ({len(text)} chars). Two to five sentences of actual rationale.")
     sentences = [s for s in re.split(r"(?<=[.!?])\s+", text) if s.strip()]

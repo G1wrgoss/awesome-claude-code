@@ -54,7 +54,7 @@ def main() -> int:
 
     claim = prompt_until_valid(
         "Claim (name the indicator, the exact threshold, and the release it resolves against):",
-        check_claim, multiline=True, given=args.claim,
+        lambda value: check_claim(value, example=args.example), multiline=True, given=args.claim,
     )
 
     if args.probability is not None:
@@ -90,11 +90,12 @@ def main() -> int:
 
     resolution_source = prompt_until_valid(
         "Resolution source (the exact dated release that settles this):",
-        check_resolution_source, given=args.resolution_source,
+        lambda value: check_resolution_source(value, example=args.example),
+        given=args.resolution_source,
     )
     reasoning = prompt_until_valid(
         "Reasoning, 2-5 sentences, in your own words:",
-        check_reasoning, multiline=True, given=args.reasoning,
+        lambda value: check_reasoning(value, example=args.example), multiline=True, given=args.reasoning,
     )
 
     prediction = Prediction(
