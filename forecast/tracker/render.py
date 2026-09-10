@@ -22,13 +22,20 @@ from .scoring import THIN_BUCKET, CalibrationBucket, RollingPoint, Standing, cal
 # ---------------------------------------------------------------------------------------
 INK = "#16222f"
 INK_SOFT = "#5b6b79"
-INK_FAINT = "#8f9ca7"
+# Two faint tones, because one value cannot clear WCAG AA on both surfaces: anything light
+# enough to read on the ink panel fails badly on paper, and vice versa.
+INK_FAINT = "#616d79"      # faint text on the paper ground   -- 4.61:1
+PANEL_FAINT = "#8f9ca7"    # faint text inside the ink panel  -- 5.74:1
 PAPER = "#f2efe9"
 PAPER_RAISED = "#faf8f4"
 OCHRE = "#9a7b3f"
 OCHRE_BRIGHT = "#c9a45c"
 AFFIRMED = "#4a7350"
-REFUTED = "#9c4b41"
+# Deliberately darker than AFFIRMED, not merely a different hue: the two were within
+# 1.10:1 of each other in luminance, so a red-green colour-blind reader had almost
+# nothing to separate them. Now they differ in lightness too, on top of the glyph
+# and the word that already carry the outcome.
+REFUTED = "#853a32"
 PANEL_GRID = "#2b3b4c"
 
 
@@ -57,16 +64,21 @@ def calibration_svg(buckets: list[CalibrationBucket]) -> str:
     are enormous and the chart looks uncertain -- that is the honest reading and it is left
     alone rather than smoothed into something reassuring.
     """
-    width, height = 960, 580
+    width, height = 960, 800
     left, right, top, bottom = 92, 40, 44, 92
     plot_w = width - left - right
     plot_h = height - top - bottom
 
+    # Inset the data range. Without it a bucket at 0% or 100% is drawn centred on the frame and
+    # half of it falls outside -- which only becomes visible once the record holds enough
+    # predictions to reach the extremes.
+    pad = 22
+
     def px(value: float) -> float:   # value 0-1 -> x
-        return left + value * plot_w
+        return left + pad + value * (plot_w - 2 * pad)
 
     def py(value: float) -> float:   # value 0-1 -> y (inverted)
-        return top + (1 - value) * plot_h
+        return top + pad + (1 - value) * (plot_h - 2 * pad)
 
     populated = [b for b in buckets if not b.empty]
     total = sum(b.count for b in buckets)
@@ -129,11 +141,11 @@ def calibration_svg(buckets: list[CalibrationBucket]) -> str:
         value = step / 10
         parts.append(
             f'<text x="{px(value):.1f}" y="{top + plot_h + 26:.1f}" text-anchor="middle" '
-            f'class="cal-tick" fill="{INK_FAINT}">{step * 10}</text>'
+            f'class="cal-tick" fill="{PANEL_FAINT}">{step * 10}</text>'
         )
         parts.append(
             f'<text x="{left - 14}" y="{py(value) + 5:.1f}" text-anchor="end" '
-            f'class="cal-tick" fill="{INK_FAINT}">{step * 10}</text>'
+            f'class="cal-tick" fill="{PANEL_FAINT}">{step * 10}</text>'
         )
 
     parts.append(
@@ -152,7 +164,7 @@ def calibration_svg(buckets: list[CalibrationBucket]) -> str:
         )
         parts.append(
             f'<text x="{left + plot_w / 2:.1f}" y="{top + plot_h / 2 + 22:.1f}" '
-            f'text-anchor="middle" class="cal-note" fill="{INK_FAINT}">'
+            f'text-anchor="middle" class="cal-note" fill="{PANEL_FAINT}">'
             f'The curve appears once predictions begin to resolve.</text>'
         )
         parts.append("</svg>")
@@ -175,22 +187,11 @@ def calibration_svg(buckets: list[CalibrationBucket]) -> str:
                 f'stroke="{OCHRE_BRIGHT}" stroke-width="2" opacity="{opacity}"/>'
             )
 
-    # Connecting path through well-populated buckets only. A line drawn through two-sample
-    # buckets would imply a trend that is not there.
-    solid = [b for b in populated if not b.thin]
-    if len(solid) > 1:
-        points = " ".join(
-            f"{px(b.mean_stated):.1f},{py(b.hit_rate):.1f}" for b in solid  # type: ignore[arg-type]
-        )
-        parts.append(
-            f'<polyline points="{points}" fill="none" stroke="{PAPER}" stroke-width="2.5" opacity="0.85"/>'
-        )
-
     for bucket in populated:
         assert bucket.mean_stated is not None and bucket.hit_rate is not None
         x, y = px(bucket.mean_stated), py(bucket.hit_rate)
-        radius = 6 + 2.6 * (bucket.count ** 0.5)
-        radius = min(radius, 26)
+        radius = 5 + 2.2 * (bucket.count ** 0.5)
+        radius = min(radius, 16)
         if bucket.thin:
             parts.append(
                 f'<circle cx="{x:.1f}" cy="{y:.1f}" r="{radius:.1f}" fill="none" '

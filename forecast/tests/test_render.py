@@ -173,12 +173,32 @@ def test_rolling_svg_empty_state():
     assert "Nothing resolved yet" in rolling_svg([])
 
 
-def test_calibration_svg_does_not_connect_thin_buckets():
-    """A line through two-sample buckets would imply a trend that is not in the data."""
+def test_calibration_svg_never_connects_the_buckets():
+    """Bucket-to-bucket movement at these sample sizes is noise; a line would imply a trajectory.
+
+    Checked at volume too, because the scribble this produces only appears once enough buckets
+    are populated to zigzag.
+    """
     thin = calibration([make(25, True), make(75, False)])
     assert "polyline" not in calibration_svg(thin)
-    solid = calibration([make(25, True) for _ in range(5)] + [make(75, False) for _ in range(5)])
-    assert "polyline" in calibration_svg(solid)
+    many = calibration([make(p, True) for p in range(5, 100, 3)] + [make(p, False) for p in range(7, 100, 3)])
+    assert "polyline" not in calibration_svg(many)
+
+
+def test_extreme_buckets_are_drawn_inside_the_plot_frame():
+    """A bucket at 0% or 100% must not straddle the axis it sits on."""
+    import re as _re
+
+    buckets = calibration([make(0, False) for _ in range(6)] + [make(100, True) for _ in range(6)])
+    svg = calibration_svg(buckets)
+    frame = _re.search(r'<rect x="(\d+)" y="(\d+)" width="(\d+)" height="(\d+)" fill="none"', svg)
+    assert frame, "plot frame not found"
+    fx, fy, fw, fh = (int(g) for g in frame.groups())
+    circles = _re.findall(r'<circle cx="([\d.]+)" cy="([\d.]+)" r="([\d.]+)"', svg)
+    assert circles
+    for cx, cy, r in ((float(a), float(b), float(c)) for a, b, c in circles):
+        assert cx - r >= fx and cx + r <= fx + fw, f"circle at {cx} breaches the frame horizontally"
+        assert cy - r >= fy and cy + r <= fy + fh, f"circle at {cy} breaches the frame vertically"
 
 
 def test_chart_has_a_text_alternative():
